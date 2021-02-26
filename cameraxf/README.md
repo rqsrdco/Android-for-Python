@@ -3,9 +3,11 @@ CameraXF BETA
 
 *A Kivy Android camera that actually works?*
 
+[Download from the Code Button here](https://github.com/RobertFlatt/Android-for-Python)
+
 CameraXF is BETA because:
 
-- It depends on an (unapproved p4a PR)<https://github.com/kivy/python-for-android/pull/2385>
+- It depends on an [unapproved p4a PR](https://github.com/kivy/python-for-android/pull/2385)
 
 - It depends on Google software that is in part 'release candidate' and in part 'alpha'. This Google software is currently being updated monthly.
 
@@ -15,7 +17,7 @@ Building the QR reader, and hence the whole example, depends gettext. Do this fi
 
 	 sudo apt-get install gettext
 
-The included buildozer.spec automatically imports a custom p4a that implements the unapproved PR. Since it depends on a fork, CameraXF should only be used for testing or prototyping. The *current* buildozer options are documented in (BUILDOZER_README.txt)<https://github.com/RobertFlatt/android-for-python/cameraxf/BUILDOZER_README.txt>
+The included buildozer.spec automatically imports a custom p4a that implements the unapproved PR. Since it depends on a fork, CameraXF should only be used for testing or prototyping. The *current* buildozer options are documented in [BUILDOZER_README.txt](https://github.com/RobertFlatt/Android-for-Python/cameraxf/tree/master/BUILDOZER_README.txt)
 
 The example has 4 buttons. Select a Photo Camera, a Video Camera, a Mirror, or a QR code reader on the home screen. A back gesture or back button returns you to the buttons.
 

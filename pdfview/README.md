@@ -1,11 +1,11 @@
-Webview
+Pdfview
 =======
 
-*An embedded Kivy Android web page viewer*
+*An embedded Kivy Android PDF viewer*
 
-Provides full screen display of https:// and file:// urls. To close the viewer use the back gesture or the back button.
+Provides full screen display of .pdf files. To close the viewer use the back gesture or the back button.
 
-The buildozer options are documented in (BUILDOZER_README.txt)<https://github.com/RobertFlatt/android-for-python/webview/BUILDOZER_README.txt>
+The buildozer options are documented in [BUILDOZER_README.txt](https://github.com/RobertFlatt/Android-for-Python/tree/main/pdfview/BUILDOZER_README.txt)
 
-(Download Page)<https://github.com/RobertFlatt/android-for-python>
+[Download from the Code Button here](https://github.com/RobertFlatt/Android-for-Python)
 
