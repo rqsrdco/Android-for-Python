@@ -20,7 +20,7 @@
 # Issues:
 #   no pinch/zoom/drag, so 'orientation = all' is a good choice
 #
-# Source https://github.com/RobertFlatt/android-for-python/pdfview
+# Source https://github.com/RobertFlatt/Android-for-Python/pdfview
 
 from kivy.uix.modalview import ModalView
 from kivy.clock import Clock

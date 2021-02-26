@@ -48,7 +48,7 @@
 #   WRITE_EXTERNAL_STORACE maybe required for private storage whan api <=28
 #   request_permissions([Permission.CAMERA,Permission.RECORD_AUDIO])
 #
-# Source https://github.com/RobertFlatt/android-for-python/cameraxf
+# Source https://github.com/RobertFlatt/Android-for-Python/cameraxf
 #
 # build note: in the example pyzbar may fail to build, try this:
 # sudo apt-get update
