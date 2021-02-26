@@ -27,7 +27,7 @@ Images and videos are saved by default to public storage. My file manager app fi
 
 The QR reader displays its results on screen; it should be viewed as a simple example of image analysis and image decorating as it does not implement a 'go to' functionality of a typical QR app. 
 
-The camera is full screen ONLY, messing with the layouts is for fools and experts as the layouts are implemented in Java and Android View classes. Details of the [API](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/cameraxf.py.)
+The camera is full screen ONLY, messing with the layouts is for fools and experts as the layouts are implemented in Java and Android View classes. Details of the [API](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/cameraxf.py).
 
 Captain Obvious pointed out that he wants a widget he could embed in a Kivy layout, rather than a full screen widget which is instantiated from a Kivy layout. One step at a time bro.
 
