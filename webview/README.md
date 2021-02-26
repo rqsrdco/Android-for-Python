@@ -5,7 +5,7 @@ Webview
 
 Provides full screen display of "https://" and "file://" urls. To close the viewer use the back gesture or the back button.
 
-The buildozer options are documented in [BUILDOZER_README.txt](https://github.com/RobertFlatt/Android-for-Python/webview/tree/master/BUILDOZER_README.txt)
+The buildozer options are documented in [BUILDOZER_README.txt](https://github.com/RobertFlatt/Android-for-Python/webview/blob/main/BUILDOZER_README.txt)
 
 [Download using the Code button here](https://github.com/RobertFlatt/Android-for-Python)
 
