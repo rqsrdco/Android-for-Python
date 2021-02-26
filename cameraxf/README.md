@@ -17,7 +17,7 @@ Building the QR reader, and hence the whole example, depends gettext. Do this fi
 
 	 sudo apt-get install gettext
 
-The included buildozer.spec automatically imports a custom p4a that implements the unapproved PR. Since it depends on a fork, CameraXF should only be used for testing or prototyping. The *current* buildozer options are documented in [BUILDOZER_README.txt](https://github.com/RobertFlatt/Android-for-Python/cameraxf/blob/main/BUILDOZER_README.txt)
+The included buildozer.spec automatically imports a custom p4a that implements the unapproved PR. Since it depends on a fork, CameraXF should only be used for testing or prototyping. The *current* buildozer options are documented in [BUILDOZER_README.txt](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/BUILDOZER_README.txt)
 
 The example has 4 buttons. Select a Photo Camera, a Video Camera, a Mirror, or a QR code reader on the home screen. A back gesture or back button returns you to the buttons.
 
