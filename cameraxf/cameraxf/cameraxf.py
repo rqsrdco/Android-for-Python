@@ -72,11 +72,13 @@ class CameraXF(ModalView):
                  optimize = 'latency',
                  resolution = None,
                  private_storage = False,
+                 zoom = 0.5,
                  callback = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.camerax = None
         self.layout = None
+        self.enable_dismiss = True
         ##############################
         # Option handling
         ##############################
@@ -123,6 +125,8 @@ class CameraXF(ModalView):
         else:
             resolution = None
 
+        zoom = min(max(zoom,0),1)
+
         if callback:
             if not ismethod(callback) or\
                len(signature(callback).parameters) !=1:
@@ -149,6 +153,7 @@ class CameraXF(ModalView):
             callback = callback,
             flash = flash,
             optimize = optimize,
+            zoom = zoom,
             privatex = private_storage)   
 
         ##############################
@@ -163,12 +168,14 @@ class CameraXF(ModalView):
         self.build_layout()
 
     def on_dismiss(self):
-        self.video_stop()
-        self._unbind_camera()
-        if self.layout:
-            self.layout.destroy_layout()
-        self.camerax = None
-        self.layout = None
+        if self.enable_dismiss:
+            self.enable_dismiss = False
+            self.video_stop()
+            self._unbind_camera()
+            if self.layout:
+                self.layout.destroy_layout()
+            self.camerax = None
+            self.layout = None
 
     def on_size(self, instance, size):
         self.video_stop()

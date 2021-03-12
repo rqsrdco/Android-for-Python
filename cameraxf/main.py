@@ -59,6 +59,7 @@ class MyApp(App):
     def camera_mirror(self,b):
         if check_permission(Permission.CAMERA):
             self.cameraxf = CameraXF(capture='none',
+                                     zoom = 0,
                                      facing='front')
             self.cameraxf.bind(on_dismiss=self._dismissed)
 
@@ -76,7 +77,7 @@ class MyApp(App):
 
     def captured(self,file_id):
         if not 'ERROR:' in file_id[:6]:
-            file_id = 'Saved:\n' + file_id
+            file_id = 'Saved as:\n' + file_id
         Toast().show(file_id)
 
     def analyze(self,image_proxy):

@@ -3,7 +3,11 @@ package org.kivy.camerax;
 import androidx.camera.core.VideoCapture.OnVideoSavedCallback;
 import androidx.camera.core.VideoCapture.OutputFileResults;
 import android.net.Uri;
+import android.content.Context;
+import android.database.Cursor;
+import android.provider.MediaStore.MediaColumns;
 import org.kivy.camerax.CallbackWrapper;
+import org.kivy.android.PythonActivity;
 
 public class VideoSavedCallback implements OnVideoSavedCallback {
 
@@ -16,7 +20,26 @@ public class VideoSavedCallback implements OnVideoSavedCallback {
     public void onVideoSaved(OutputFileResults outputFileResults){
 	Uri saveuri = outputFileResults.getSavedUri();
 	if (saveuri != null) {
-	    this.callback_wrapper.callback_string(saveuri.toString()); 
+	    String result = "";
+	    if (saveuri.getScheme().equals("content")) {
+		Context context =
+		    PythonActivity.mActivity.getApplicationContext();
+		Cursor cursor =
+		    context.getContentResolver().query(saveuri, null,
+						       null, null, null);
+		String dn = MediaColumns.DISPLAY_NAME;
+		String rp = MediaColumns.RELATIVE_PATH;
+		int nameIndex = cursor.getColumnIndex(dn);
+		int pathIndex = cursor.getColumnIndex(rp);
+		cursor.moveToFirst();
+		String file_name = cursor.getString(nameIndex);
+		String file_path = cursor.getString(pathIndex);
+		cursor.close();
+		result = file_path + file_name; 
+	    } else {
+	        result = saveuri.toString();
+	    }
+	    this.callback_wrapper.callback_string(result);
 	}
     }
 	

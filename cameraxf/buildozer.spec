@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = CameraXF BETA
+title = CameraXF
 
 # (str) Package name
-package.name = cameraxfbeta
+package.name = cameraxf
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test

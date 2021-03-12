@@ -1,17 +1,15 @@
-CameraXF BETA
-=============
+CameraXF
+========
 
 *A Kivy Android camera that actually works?*
 
 [Download from the Code Button here](https://github.com/RobertFlatt/Android-for-Python)
 
-CameraXF is BETA because:
+CameraXF is a turnkey, full screen, photo, video, data analaysis camera.
 
 - It depends on an [unapproved p4a PR](https://github.com/kivy/python-for-android/pull/2385)
 
 - It depends on Google software that is in part 'release candidate' and in part 'alpha'. This Google software is currently being updated monthly.
-
-- You have not tested CameraXF. Really, we won't know unless you all look for the issues. I want to know if it does not perform as advertised, but I would prefer to hear that it does.
 
 Building the QR reader, and hence the whole example, depends gettext. Do this first, if your Linux already has gettext installed then this will be a no-op.
 
@@ -23,7 +21,7 @@ The example has 4 buttons. Select a Photo Camera, a Video Camera, a Mirror, or a
 
 Try pause/resume, rotation, pinch zoom, tap for focus/exposure, the Photo Camera has a button to switch cameras dynamically. If a video is currently being recorded then, a pause, a back gesture/button, or rotating the camera between portrait and landscape (when .spec orientation = all) will cause the recording to stop and be saved. This is the expected behavior.
 
-Images and videos are saved by default to public storage. My file manager app finds them under "Main Storage/DCIM/CameraXF BETA", organized by date and time. A toast shows the uri on which an app could operate. If you don't understand what a uri is, wait for some future example in this repository or set private=True (but then your file manager probably won't find the saved file).
+Images and videos are saved by default to public storage. My file manager app finds them under "Main Storage/DCIM/CameraXF", organized by date and time. A toast shows the uri on which an app could operate. If you don't understand what a uri is, wait for some future example in this repository or set private=True (but then your file manager probably won't find the saved file).
 
 The QR reader displays its results on screen; it should be viewed as a simple example of image analysis and image decorating as it does not implement a 'go to' functionality of a typical QR app. 
 

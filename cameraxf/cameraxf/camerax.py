@@ -54,6 +54,7 @@ class CameraX():
                  callback,
                  flash,
                  optimize,
+                 zoom,
                  privatex,
                  **kwargs):
         super().__init__(**kwargs)
@@ -64,6 +65,7 @@ class CameraX():
         self.resolution = resolution
         self.callback = callback
         self.private = privatex
+        self.zoom = zoom
 
         self.ASPECT_RATIO_NONE = 432
         if aspect_ratio == '16:9':
@@ -182,7 +184,7 @@ class CameraX():
         self.cam = self.cameraProvider.bindToLifecycle(ProcessLifecycleOwner.get(),
                                                        cameraSelector,
                                                        useCaseGroup)
-        self.cam.cameraControl.setLinearZoom(0.5)
+        self.cam.cameraControl.setLinearZoom(self.zoom)
         self.focus(0.5,0.5)
 
     @run_on_ui_thread        
@@ -218,6 +220,8 @@ class CameraX():
                 scale = min(scale,self.zs.getMaxZoomRatio())
                 scale = max(scale,self.zs.getMinZoomRatio())
                 self.cam.cameraControl.setZoomRatio(scale)
+                self.zs = self.cam.cameraInfo.getZoomState().getValue()
+                self.zoom = self.zs.getLinearZoom()
 
     def video_stop(self):
         if self.video_is_recording:
@@ -265,16 +269,15 @@ class CameraX():
         context = PythonActivity.mActivity.getApplicationContext()
         dt = datetime.datetime.now()
         today = dt.strftime("%Y_%m_%d")
-        name = dt.strftime("%H_%M_%S")
+        name = dt.strftime("%H_%M_%S") + '.jpg'
         if self.private:
-            file = name + '.jpg'
             dir = join(app_storage_path(), Environment.DIRECTORY_DCIM)
             if not exists(dir):
                 mkdir(dir)
             dir = join(dir,today)
             if not exists(dir):
                 mkdir(dir)
-            self.filepath = join(dir,file)
+            self.filepath = join(dir,name)
             self.picfile = File(self.filepath)
             self.icf = ImageCaptureOutputFileOptionsBuilder(self.picfile).build()
         else:
