@@ -147,6 +147,7 @@ class PdfView(ModalView):
 
     def __init__(self, filepath, **kwargs):
         super().__init__(**kwargs)
+        self.enable_dismiss = True
         self.filepath = filepath
         self.layout = None
         self.imgview = None
@@ -165,8 +166,10 @@ class PdfView(ModalView):
         self._instantiate()
 
     def on_dismiss(self):
-        self._destroy_render()
-        self._destroy_layout()
+        if self.enable_dismiss:
+            self.enable_dismiss = False
+            self._destroy_render()
+            self._destroy_layout()
 
     def on_size(self, instance, size):
         self._display_current_page()

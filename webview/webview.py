@@ -90,6 +90,7 @@ class WebView(ModalView):
         self.enable_downloads = enable_downloads
         self.enable_zoom = enable_zoom
         self.webview = None
+        self.enable_dismiss = True
         self.open()
 
     @run_on_ui_thread        
@@ -118,14 +119,16 @@ class WebView(ModalView):
         
     @run_on_ui_thread        
     def on_dismiss(self):
-        parent = cast(ViewGroup, self.layout.getParent())
-        if parent is not None: parent.removeView(self.layout)
-        self.webview.clearHistory()
-        self.webview.clearCache(True)
-        self.webview.clearFormData()
-        self.webview.destroy()
-        self.layout = None
-        self.webview = None
+        if self.enable_dismiss:
+            self.enable_dismiss = False
+            parent = cast(ViewGroup, self.layout.getParent())
+            if parent is not None: parent.removeView(self.layout)
+            self.webview.clearHistory()
+            self.webview.clearCache(True)
+            self.webview.clearFormData()
+            self.webview.destroy()
+            self.layout = None
+            self.webview = None
         
     @run_on_ui_thread
     def on_size(self, instance, size):
