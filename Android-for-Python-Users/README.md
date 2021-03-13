@@ -11,7 +11,9 @@ Python and Kivy are portable across operating systems because of POSIX, Python w
 
 For a well written app that only paints the screen, and does nothing else, building for Android will be 'push button'. One can for example build 'Hello World' with the default 'buildozer.spec' file. Of course this does not describe many apps.
 
-This document is not a substitute for Reading The Fine Manual. [Buildozer](https://github.com/kivy/buildozer/tree/master/docs/source), [Python for Android](https://github.com/kivy/python-for-android/tree/develop/doc/source), and [Android](https://developer.android.com/guide). And assumes android.api >= 29
+This document is not a substitute for Reading The Fine Manual [(RTFM)](https://en.wikipedia.org/wiki/RTFM). Your basic resources are [Buildozer](https://github.com/kivy/buildozer/tree/master/docs/source), [Python for Android](https://github.com/kivy/python-for-android/tree/develop/doc/source), and [Android](https://developer.android.com/guide).
+
+We assume android.api >= 29
 
 Python-for-Android is a truly amazing achievement, but there are some details to understand. The alternative is Java and the Android api, which has been shown to induce insanity in laboratory mice. 
 
@@ -23,29 +25,29 @@ Lastly this document is my understanding as of the date above. I am not a develo
 
    Android is not POSIX compliant (POSIX is so deep in your assumptions about computers you probably don't know it exists).
    
-The file system model is different, the app cannot use any directory in the file system. The app has specific private storage directories that support file operations. The app also has shared storage between apps, this is implemented as a database.
+The file system model is different, the app cannot use any directory in the file system. The app has specific private storage directories that support file operations. The app also has storage shared between apps, this is implemented as a database.
 
-Threads are available and unlike the desktop, run on all available cores. But a subprocess can't execute an app, and there is no command shell to run inside a subprocess.
+Threads are available and unlike the desktop, run on all available cores. This is cool. But a subprocess can't execute an app, and there is no command shell to run inside a subprocess.
 
-Multi-tasking, on the desktop when an app loses focus or is minimized it continues to execute - it just doesnt see UI events. Android is not multi-tasking when an app is removed from the UI it pauses, then does not execuate any app code. Execution without a UI requires an Android service.
+Multi-tasking; on the desktop when an app loses focus or is minimized it continues to execute - it just doesnt see UI events. Android is not multi-tasking, when an app is removed from the UI it *pauses*, and then does not execuate any app code. Execution without a UI requires an Android service.
 
 ## Wheels
 
-Some Python packages are not written in Python (not pure-Python), they contain code that must be compiled. Pip provides pre-compiled packages for desktop OSes, but not for Android. P4a addresses this with [recipes](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes), but not all impure packages are available. AVOID DISAPPOINTMENT, check availability first.
+Some Python packages are not written in Python (are not pure-Python), they contain code that must be compiled. Pip provides pre-compiled packages for desktop OSes, but not for Android. P4a addresses this with [recipes](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes), but not all impure packages are available. AVOID DISAPPOINTMENT, check availability first.
 
 ## Meta-information
 
-Unlike the desktop you must provide information *about* your Python code, this one causes noobs to crash and burn. This information must be supplied in the buildozer.spec file. It includes *all* the pip packages your app depends on, any data files your app depends on, and Android permissions your app depends on. Meta-information may not be limited to that short list, but that list is critical.
+Unlike the desktop you must provide information *about* your Python code, this requirement causes everybody who doesn't understand it to crash and burn. This information must be supplied in the buildozer.spec file. It includes *all* the pip packages your app depends on, any data types your app depends on, and Android permissions your app depends on. Meta-information may not be limited to that short list, but that list is critical.
 
 # Android Storage
 
 Android's view of its file system has changed a few times over the years. The result is a messy pile of jargon: local, system, internal, external, primary, secondary, scoped, all describe views of storage.
 
-However in the storage model described here storage is either Private Storage or Shared Storage. Private storage content is only visible to the app that created it, shared storage is visible to all apps. This model is valid if the build api>=29.
+However in the storage model described here storage is either *Private Storage* or *Shared Storage*. Private storage content is only visible to the app that created it, shared storage is visible to all apps. This model is valid if the build api>=29.
 
 Physically storage may be 'internal' or 'external', this is a somewhat historical view where 'external' represents the (on older devices possibly removable) sdcard. The apis referenced here all default to 'external', with 'internal' as an option.
 
-## Private Storage:
+## Private Storage
 
 An app can perform Python file operations (read, write, shutil) on its private storage. Files in Private Storage are persistent over the life of the app, they are retained when the app is updated, and deleted when the app is uninstalled.
 
@@ -55,17 +57,11 @@ Do not confuse private with secure, on older Android versions it is possible for
 
 No permissions are requires to read or write an app's Private Storage. [More on permissions below](#app-permissions)
 
-## Shared Storage:
+## Shared Storage
 
 Shared storage is visible to all apps, is persistent after the app is uninstalled, and implemented as a database. The nearby [storage example](https://github.com/RobertFlatt/Android-for-Python/tree/main/storage) demonstrates the database insert(), delete(), and retrieve() operations.
 
-Shared storage is organized based on root directories. Where:
-  'Music'         is the Music directory
-  'Moview'        is the Movies directory
-  'Pictures'      is the Pictures directory
-  'Documents'     is the Documents directory
-  '*/*'           one of the first 4 depending on file extension
-  'Downloads/*'   is the Downloads directory
+Shared storage is organized based on root directories Android's 'Main Storage'. They are 'Music', 'Movies', 'Pictures', 'Documents', and 'Downloads'.
 
 No permissions are requires to read or write an app's own Shared Storage. Reading another app's Shared Storage requires READ_EXTERNAL_STORAGE permission.
 
@@ -77,7 +73,7 @@ Files in Shared Storage can be shared between apps. Either using the file picker
 
 Threads are available and are have more utility than on the desktop because they are executed on all available cores. The single core thread implementation on desktops allows lazy assumptions about thread result ordering. These will bite you on Android if the code is not written in a thread safe manner. Always use callbacks.
 
-Kivy executes on the 'UI thread', Android requires that this thread is always responsive to UI events. As a consequence long latency operations (eg network access, sleep()) or computationally expensive operations must be performed in their own Python threads. Threads must be truly asynchronous to the UI thread, so do not join() in the UI thread. A super thread safe way to return results to the UI thread is to use Clock_schedule_once().
+Kivy executes on the 'UI thread', Android requires that this thread is always responsive to UI events. As a consequence long latency operations (eg network access, sleep()) or computationally expensive operations must be performed in their own Python threads. Threads must be truly asynchronous to the UI thread, so do not join() in the UI thread. A very thread safe way to return results to the UI thread is to use Clock_schedule_once().
 
 The Python subprocess is not available. The Android equivalent is an Activity, an Activity with no UI is a Service. An Activity can be created through Pyjnius and Java, by first creating an Intent. The special case of creating an Android Service can be automated using Buildozer.
 
@@ -102,16 +98,16 @@ Buildozer's behavior can be non-deterministic if run as root, or if it is run on
 
 ## Changing buildozer.spec
 
-Note that Buildozer allows *specification* of build files, versions, and options, but unlike most other build tools it *does not do version management*. If buildozer.spec is changed the change probably *won't* propagate into the apk on the next build. After changing the buildozer.spec file users *must* do an appclean.
+Note that Buildozer allows *specification* of build files, versions, and options; but unlike most other build tools it *does not do version management*. If buildozer.spec is changed the change probably *won't* propagate into the apk on the next build. After changing the buildozer.spec file users *must* do an appclean.
 ```
 buildozer appclean
 buildozer android debug
 ```
-There may be some exceptions to this, the only one I know to be safe is one can add (but not change version of, or remove) a package to the [requirements](###requirements) list without the appclean.
+There may be some exceptions to this, the only one I know to be safe is one can add (but not change version of, or remove) a package to the [requirements](#requirements) list without the appclean.
 
 ## Some buildozer.spec options
 
-[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/specifications.rst), really. For [KivyMD](##kivymd).
+[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/specifications.rst), really. And see [KivyMD buildozer.spec](#kivymd).
 
 ### requirements
 
@@ -123,7 +119,7 @@ The list must be complete, to miss one item will be fatal. Some packages don't a
 ```
 requirements = python3,kivy==2.0.0,requests,urllib3,chardet,idna
 ```
-Be careful that the packages you add here are pure Python. If the package is not pure Python and does not have a [recipe in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes) then there is an issue. The options are to either rewrite the app, locally modify an existing recipe [see Appendix C](#appendix-c-locally-modifying-a-recipe), [create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst), or import the functionality from Java. None of these options are trivial. That is why it said AVOID DISAPPOINTMENT in [the Wheels section above](##wheels).
+Be careful that the packages you add here are pure Python. If the package is not pure Python and does not have a [recipe in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes) then there is an issue. The options are to either rewrite the app, locally modify an existing recipe [see Appendix C](#appendix-c-locally-modifying-a-recipe), [create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst), or import the functionality from Java. None of these options are trivial. That is why it said AVOID DISAPPOINTMENT in [the Wheels section above](#wheels).
 
 ### source.include_exts
 
@@ -159,7 +155,7 @@ android.arch = arm64-v8a
 
 # Debugging
 
-On the desktop your friends are the Python stack trace, and logging or print statements. No different on Android. To get these we [run the debugger](https://github.com/kivy/buildozer/blob/master/docs/source/quickstart.rst#run-my-application).
+On the desktop your friends are the Python stack trace, and logging or print statements. It is no different on Android. To get these we [run the debugger](https://github.com/kivy/buildozer/blob/master/docs/source/quickstart.rst#run-my-application).
 
 First connect the device via USB, on the Android device enable 'Developer Mode' and 'USB debugging'.
 
@@ -174,7 +170,7 @@ In the logcat output look for 'Traceback', what follows is a Python stack trace,
 ```
 ModuleNotFoundError: No module named 'some-import-name'
 ```
-Where 'some-import-name' is in 'some-pip-package', then this pip package name is missing from [buildozer.spec requirements](###requirements).
+Where 'some-import-name' is in 'some-pip-package', then this pip package name is missing from [buildozer.spec requirements](#requirements).
 
 It is possible to [debug using an emulator](#appendix-b-using-an-emulator) but this is not recomended initially, as it adds unknowns to the debug process. The emulator is useful for checking a debugged app on various devices and Android versions.
 
@@ -202,9 +198,9 @@ Follow the [Kivy Lifecycle](https://kivy.org/doc/stable/guide/basic.html#kivy-ap
 
 Do not place code in the app that interacts with Android 'script style', to be executed before the Kivy build() call.
 
-request_permissions() must only be called from the App's build() method, and only one once with an argument that is a list of all required permissions.
+`request_permissions()` must only be called from the App's `build()` method, and only one once with an argument that is a list of all required permissions.
 
-The App's on_stop() method is not always called, use on_pause() to save state.
+The App's `on_stop()` method is not always called, use `on_pause()` to save state.
 
 ## The Android package
 
@@ -216,11 +212,11 @@ Plyer is an OS independent api for some non-POSIX OS features. See [available fe
 
 The [Plyer examples](https://github.com/kivy/plyer/tree/master/examples) are the documentation
 
-On Android some Plyer features are not available on all apis. If you plan to use Plyer first try a small test case with your target api version. If it woks, check all the features you need are available, as Plyer has a platform lowest common denominator design.
+On Android some Plyer features are not available on all apis. If you plan to use Plyer, first try a small test case with your target api version. If it does what you expect, check that all the features you need are available; as Plyer has a platform lowest common denominator design.
 
 ## Pyjnius
 
-[Pyjnus](https://github.com/kivy/pyjnius/tree/master/docs/source) allows import of Java code into Python code. It is an interface to the Java api and the Android api. The Android api is only available on Android devices, Android api calls must be debugged on Android. For example:
+[Pyjnus](https://github.com/kivy/pyjnius/tree/master/docs/source) allows import of Java code into Python code. It is an interface to the Java api and the Android api. The Android api is only available on Android devices, Android api calls must be debugged on Android.
 
 ```python
 from jnius import autoclass
@@ -237,11 +233,11 @@ DownloadManagerRequest = autoclass('android.app.DownloadManager$Request')
    self.request.setNotificationVisibility(visibility)
 ```
 
-Then use this reference to write code with Python syntax and semantics with Java class semantics added. Some basic knowledge of Java semantics is required, get over it. Android classes are referenced in the same way, this will require (possibly extensive) reading of the [Android Developer documentation](https://developer.android.com/guide) [and](https://developer.android.com/reference).
+Then use this to write code with Python syntax and semantics, and Java class semantics added. Some basic knowledge of Java semantics is required, get over it. Android classes will require (possibly extensive) reading of the [Android Developer Guide](https://developer.android.com/guide) and [Android Reference](https://developer.android.com/reference).
 
 It is also possible to write Java class implementations in Python, [RTFM](https://github.com/kivy/pyjnius/blob/master/docs/source/api.rst#java-class-implementation-in-python) and [look at some examples](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/listeners.py).
 
-It is not possible to import Java abstract classes, as they have no implementation. And it it is not possible to provide that implementation in Python. You must write the implementation in Java and import that.
+It is not possible to import Java *abstract* classes, as they have no *implementation* (abstract and implementation are Java keywords). And it it is not possible to provide the implementation in Python. You must write the implementation in Java and import that.
 
 One thing to watch out for is you will be using two garbage collectors working on the same heap, but they don't know each other's boundaries. Python may free a local reference to a Java object because it cant see that the object is used. Obviously this will cause the app to crash in an ugly way. So use class variables, as in the example above, to indicate persistence to the Python garbage collector.
 
@@ -249,7 +245,7 @@ Note: some documentation examples are obsolete. If you see '.renpy.' as a sub fi
 
 ## Kivy Garden
 
-[Kivy Garden](https://github.com/kivy-garden/) is a library of components ('flowers'). It is mostly not maintained. Anybody who has had a garden knows a garden needs a gardener, Kivy Garden doesn't have one. Kivy Garden is a useful resource, mostly best used as examples to copy and modify (fix) rather than components you can install and instantiate.
+[Kivy Garden](https://github.com/kivy-garden/) is a library of components ('flowers'). It is mostly not maintained. Anybody who has had a garden knows a garden needs a gardener, Kivy Garden doesn't have one. Kivy Garden is a useful resource, it is mostly best used as examples to copy and modify (fix) rather than components you can install and instantiate.
 
 ## Android for Python
 
@@ -257,7 +253,7 @@ Note: some documentation examples are obsolete. If you see '.renpy.' as a sub fi
 
 ## How to create a Release APK
 
-[Instructions are here](https://github.com/kivy/kivy/wiki/Creating-a-Release-APK) but don't just follow the instructions, read all the annotated comments by HeRo002. The instructions are flawed, but in combination with the comments they are good.
+[The instructions are here](https://github.com/kivy/kivy/wiki/Creating-a-Release-APK) but don't just follow the instructions, read all the annotated comments by HeRo002. The instructions are flawed, but in combination with the comments they are good.
 
 ## Android Store
 
@@ -275,6 +271,7 @@ The easiest way to get adb is to install Android Studio.
 
 Add something like this to your PATH:
      C:\Users\UserName\AppData\Local\Android\Sdk\platform-tools
+
 Some adb commands:
 ```
 adb devices
@@ -285,17 +282,22 @@ adb logcat > log.txt
 
 # Appendix B Using an emulator
 
+Install Android Studio.
+
+In Android Studio, go to Tools->AVD Manager
+
+Use the 'Create Virtual Device..' button if the emulator you want is not listed.
+
 Right click on an emulator (view details) to see it's name, for example: Nexus_4_API_21
 
 Add something like this to your PATH:
      C:\Users\UserName\AppData\Local\Android\Sdk\emulator
+
 Start an emulator using it's name
 ```
 emulator @Nexus_4_API_21
 ```
-Check the emulator is running using 'adb devices'
-Install an app in the emulator from adb.
-The apk MUST be built with android.arch set to the same as ABI above.
+Check the emulator is running using 'adb devices'. Then install an app in the emulator from adb. The apk MUST be built with android.arch set to the same as ABI above.
 
 # Appendix C Locally modifying a recipe
 
@@ -308,13 +310,14 @@ p4a.local_recipes =  ./p4a-recipes
 
 2) create directory  ./p4a-recipes
 
-3)[Download python-for-android](https://github.com/kivy/python-for-android)
-Copy the recipe you want from python-for-android/tree/develop/pythonforandroid/recipes/RECIPE_NAME to ./p4a-recipes
+3) [Download python-for-android](https://github.com/kivy/python-for-android)
 
-4) Change the files in a way that makes you happy
+4) Copy the recipe you want from python-for-android/tree/develop/pythonforandroid/recipes/RECIPE_NAME to ./p4a-recipes
 
-5) buildozer appclean
+5) Change the files in a way that makes you happy
 
-6) buildozer android debug
+6) buildozer appclean
+
+7) buildozer android debug
 
 
