@@ -7,7 +7,7 @@ Each directory contains a stand alone runnable example. Required modifications t
 
 ## Android-for-Python-Users
 
-An unofficial [Users' Guide](https://github.com/RobertFlatt/Android-for-Python/blob/main/Android-for-Python-Users.md).
+An unofficial [Users' Guide](https://github.com/RobertFlatt/Android-for-Python/tree/main/Android-for-Python-Users).
 
 ## Storage
 
