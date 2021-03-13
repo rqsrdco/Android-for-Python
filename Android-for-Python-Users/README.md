@@ -29,7 +29,7 @@ The file system model is different, the app cannot use any directory in the file
 
 Threads are available and unlike the desktop, run on all available cores. This is cool. But a subprocess can't execute an app, and there is no command shell to run inside a subprocess.
 
-Multi-tasking; on the desktop when an app loses focus or is minimized it continues to execute - it just doesnt see UI events. Android is not multi-tasking, when an app is removed from the UI it *pauses*, and then does not execuate any app code. Execution without a UI requires an Android service.
+Multi-tasking; on the desktop when an app loses focus or is minimized it continues to execute - it just doesnt see UI events. Android is not multi-tasking, when an app is removed from the UI it *pauses*, and then does not execute any app code. Execution without a UI requires an Android service.
 
 ## Wheels
 
@@ -37,7 +37,7 @@ Some Python packages are not written in Python (are not pure-Python), they conta
 
 ## Meta-information
 
-Unlike the desktop you must provide information *about* your Python code, this requirement causes everybody who doesn't understand it to crash and burn. This information must be supplied in the buildozer.spec file. It includes *all* the pip packages your app depends on, any data types your app depends on, and Android permissions your app depends on. Meta-information may not be limited to that short list, but that list is critical.
+Unlike the desktop you must provide information *about* your Python code, this requirement causes everybody who doesn't understand it to crash and burn. This information must be supplied in the buildozer.spec file. It includes *all* the pip packages your app depends on, any file types your app depends on for data, and the Android permissions your app depends on. Meta-information may not be limited to that short list, but that list is critical.
 
 # Android Storage
 
@@ -61,7 +61,7 @@ No permissions are requires to read or write an app's Private Storage. [More on 
 
 Shared storage is visible to all apps, is persistent after the app is uninstalled, and implemented as a database. The nearby [storage example](https://github.com/RobertFlatt/Android-for-Python/tree/main/storage) demonstrates the database insert(), delete(), and retrieve() operations.
 
-Shared storage is organized based on root directories Android's 'Main Storage'. They are 'Music', 'Movies', 'Pictures', 'Documents', and 'Downloads'.
+Shared storage is organized based on root directories located in Android's 'Main Storage'. They are 'Music', 'Movies', 'Pictures', 'Documents', and 'Downloads'.
 
 No permissions are requires to read or write an app's own Shared Storage. Reading another app's Shared Storage requires READ_EXTERNAL_STORAGE permission.
 
@@ -73,7 +73,7 @@ Files in Shared Storage can be shared between apps. Either using the file picker
 
 Threads are available and are have more utility than on the desktop because they are executed on all available cores. The single core thread implementation on desktops allows lazy assumptions about thread result ordering. These will bite you on Android if the code is not written in a thread safe manner. Always use callbacks.
 
-Kivy executes on the 'UI thread', Android requires that this thread is always responsive to UI events. As a consequence long latency operations (eg network access, sleep()) or computationally expensive operations must be performed in their own Python threads. Threads must be truly asynchronous to the UI thread, so do not join() in the UI thread. A very thread safe way to return results to the UI thread is to use Clock_schedule_once().
+Kivy executes on the 'UI thread', Android requires that this thread is always responsive to UI events. As a consequence long latency operations (e.g. network access, sleep()) or computationally expensive operations must be performed in their own Python threads. Threads must be truly asynchronous to the UI thread, so do not join() in the UI thread. A non-UI thread may not write to a UI widget. A very thread safe way to return results to the UI thread is to use Clock_schedule_once().
 
 The Python subprocess is not available. The Android equivalent is an Activity, an Activity with no UI is a Service. An Activity can be created through Pyjnius and Java, by first creating an Intent. The special case of creating an Android Service can be automated using Buildozer.
 
@@ -83,14 +83,14 @@ Android restricts access to many features. An app must declare the permissions i
 
 Manifest permissions are declared in the buildozer.spec file. Common examples are  CAMERA, INTERNET, READ_EXTERNAL_STORAGE, RECORD_AUDIO. The [full list is](https://developer.android.com/reference/android/Manifest.permission). Apps that scan Bluetooth or scan Wifi may require multiple permissions. In general you must research the permissions needed, resist the temptation to blindly guess. WRITE_EXTERNAL_STORAGE is never required as of api = 30.
 
-Any app manifest permission documented as having "Protection level: dangerous" additionally requires a user permission. The four listed above are all "dangerous". User permissions generate the dialog that Android apps present to the user. In a Kivy App this must be called from the build() method using 'request_permissions()' which is part of the 'android.permissions' package.
+Any app manifest permission documented in that list as having "Protection level: dangerous" additionally require a user permission. The four listed above are all "dangerous". User permissions generate the dialog that Android apps present to the user. In a Kivy App this must be called from the `build()` method using `request_permissions()` which is part of the `android.permissions` package.
 
 See any of the nearby examples.
 
 # Buildozer and p4a
 
 ## Install
-[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), really. Errors during a Buildozer build are usually a failure to [read the install instructions](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst).
+[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), really. Errors during a Buildozer build are usually a failure to [read the install instructions](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), or an attempt to build an impure Python package.
 
 Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL or VirtualBox to run Buildozer.
 
@@ -103,11 +103,13 @@ Note that Buildozer allows *specification* of build files, versions, and options
 buildozer appclean
 buildozer android debug
 ```
-There may be some exceptions to this, the only one I know to be safe is one can add (but not change version of, or remove) a package to the [requirements](#requirements) list without the appclean.
+There may be some exceptions to this, the only one I know to be safe is one can add (but not change version of, or remove) a package in the [requirements](#requirements) list without the appclean.
+
+There is no magic universal buildozer.spec, its configuration depends on the functionality of your app. 
 
 ## Some buildozer.spec options
 
-[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/specifications.rst), really. And see [KivyMD buildozer.spec](#kivymd).
+[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/specifications.rst), really. And see the [KivyMD section](#kivymd).
 
 ### requirements
 
