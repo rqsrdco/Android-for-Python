@@ -147,7 +147,6 @@ class WebView(ModalView):
         if self.webview:
             self.webview.onResume()       
             self.webview.resumeTimers()
-            Clock.schedule_once(self._request_focus)
 
     def downloads_directory(self):
         # e.g. Android/data/org.test.myapp/files/Download
@@ -155,10 +154,6 @@ class WebView(ModalView):
         context =  PythonActivity.mActivity.getApplicationContext()
         directory = context.getExternalFilesDir(dir_type)
         return str(directory.getPath())
-
-    @run_on_ui_thread
-    def _request_focus(self,dt):
-        self.webview.requestFocus()
 
     def _back_pressed(self):
         if self.webview.canGoBack():
