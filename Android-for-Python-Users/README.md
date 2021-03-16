@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/03/12 
+Revised 2021/03/15
 
 # Introduction
 
@@ -65,6 +65,8 @@ Shared storage is organized based on root directories located in Android's 'Main
 
 No permissions are requires to read or write an app's own Shared Storage. Reading another app's Shared Storage requires READ_EXTERNAL_STORAGE permission.
 
+On devices running api < 29 the MediaStore database is flat, there are no simulated directories. The app designer has a choice to use this or the traditional file based primary shared storage. The best choice depends on the application. The MediaStore approach enables a share between apps (see next section), and data transfer is transparent when the user upgrades their device to 29 or greater. The file system approach provides the user with the familiar hierarchy, and requires WRITE_EXTERNAL_STORAGE permission.
+
 ## Sharing a file between apps
 
 Files in Shared Storage can be shared between apps. Either using the file picker, or the Share mechanism. See the examples: [Sending a Share](https://github.com/RobertFlatt/Android-for-Python/tree/main/share_snd) and [Receiving a Share](https://github.com/RobertFlatt/Android-for-Python/tree/main/share_rcv).
@@ -81,7 +83,9 @@ The Python subprocess is not available. The Android equivalent is an Activity, a
 
 Android restricts access to many features. An app must declare the permissions it requires. There are two different declarations, manifest and user. User permissions are a subset of manifest permissions.
 
-Manifest permissions are declared in the buildozer.spec file. Common examples are  CAMERA, INTERNET, READ_EXTERNAL_STORAGE, RECORD_AUDIO. The [full list is](https://developer.android.com/reference/android/Manifest.permission). Apps that scan Bluetooth or scan Wifi may require multiple permissions. In general you must research the permissions needed, resist the temptation to blindly guess. WRITE_EXTERNAL_STORAGE is never required as of api = 30.
+Manifest permissions are declared in the buildozer.spec file. Common examples are  CAMERA, INTERNET, READ_EXTERNAL_STORAGE, RECORD_AUDIO. The [full list is](https://developer.android.com/reference/android/Manifest.permission). Apps that scan Bluetooth or scan Wifi may require multiple permissions. In general you must research the permissions needed, resist the temptation to blindly guess.
+
+Python for Android always enables manifest WRITE_EXTERNAL_STORAGE permission. WRITE_EXTERNAL_STORAGE implies READ_EXTERNAL_STORAGE. [WRITE_EXTERNAL_STORAGE is never required](https://developer.android.com/training/data-storage#permissions) for devices running api >= 30.
 
 Any app manifest permission documented in that list as having "Protection level: dangerous" additionally require a user permission. The four listed above are all "dangerous". User permissions generate the dialog that Android apps present to the user. In a Kivy App this must be called from the `build()` method using `request_permissions()` which is part of the `android.permissions` package.
 
@@ -94,7 +98,14 @@ See any of the nearby examples.
 
 Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL or VirtualBox to run Buildozer.
 
-Buildozer's behavior can be non-deterministic if run as root, or if it is run on an NTFS partition mounted on a Linux system.
+Buildozer's behavior can be non-deterministic in any of these cases:
+
+It is run as root
+
+It is run on an NTFS partition mounted on a Linux system.
+
+There are Python style trailing comments in the buildozer.spec
+
 
 ## Changing buildozer.spec
 
@@ -144,16 +155,21 @@ The current buildozer default is 27, but should be "as high as possible".
 android.api = 30
 ```
 
+### android.minapi
+
+Python for Android enables `android.minapi = 21`.
+
 ### android.ndk
 
 Probably best not to change this from the current 19c. But if there is some reason you really need to, 21d also appears to work.
 
 ### android.arch
 
-Currently defaults to 32-bit ARM. For performance improvement (except if you have an old 32-bit phone, on which this will not work at all) set:
+Currently defaults to 32-bit ARM. For performance improvement, if you have a 64 bit device, change this to:
 ```
 android.arch = arm64-v8a
 ```
+An install message INSTALL_FAILED_NO_MATCHING_ABIS means the apk was built for a different architecture than the phone or emulator.
 
 # Debugging
 
@@ -243,6 +259,8 @@ It is not possible to import Java *abstract* classes, as they have no *implement
 
 One thing to watch out for is you will be using two garbage collectors working on the same heap, but they don't know each other's boundaries. Python may free a local reference to a Java object because it cant see that the object is used. Obviously this will cause the app to crash in an ugly way. So use class variables, as in the example above, to indicate persistence to the Python garbage collector.
 
+Python for Android builds an apk with a minimum device api. Importing Java modules can invalidate this minimum. Check the [Added in API level field](https://developer.android.com/reference/android/provider/MediaStore.Downloads) in the class or method reference documentation.
+
 Note: some documentation examples are obsolete. If you see '.renpy.' as a sub field in an autoclass argument replace it with '.kivy.'.
 
 ## Kivy Garden
@@ -306,11 +324,9 @@ Check the emulator is running using 'adb devices'. Then install an app in the em
 Modify an existing recipe by making a local copy.
 Replace RECIPE_NAME with whatever recipe you are changing:
 
-1) in buildozer.spec change set:
+1) in buildozer.spec set `p4a.local_recipes =  ./p4a-recipes`
 
-p4a.local_recipes =  ./p4a-recipes
-
-2) create directory  ./p4a-recipes
+2) `mkdir ./p4a-recipes`
 
 3) [Download python-for-android](https://github.com/kivy/python-for-android)
 
