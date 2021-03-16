@@ -1,6 +1,7 @@
 import datetime
-from android.storage import app_storage_path
-from android.runnable import run_on_ui_thread   
+from android.storage import app_storage_path, primary_external_storage_path
+from android.runnable import run_on_ui_thread
+from android import api_version
 from jnius import autoclass, cast
 from os.path import exists, join
 from os import mkdir
@@ -11,7 +12,8 @@ PythonActivity = autoclass('org.kivy.android.PythonActivity')
 Environment = autoclass('android.os.Environment')
 File = autoclass('java.io.File')
 Size = autoclass('android.util.Size')
-
+if api_version < 28:
+    ContextCompat = autoclass('androidx.core.content.ContextCompat')
 # MediaStore
 MediaStore = autoclass('android.provider.MediaStore')
 MediaStoreImagesMedia = autoclass('android.provider.MediaStore$Images$Media')
@@ -55,7 +57,7 @@ class CameraX():
                  flash,
                  optimize,
                  zoom,
-                 privatex,
+                 private,
                  **kwargs):
         super().__init__(**kwargs)
 
@@ -64,8 +66,9 @@ class CameraX():
         self.analysis = analysis
         self.resolution = resolution
         self.callback = callback
-        self.private = privatex
+        self.private = private
         self.zoom = zoom
+        self.name_pipe = []
 
         self.ASPECT_RATIO_NONE = 432
         if aspect_ratio == '16:9':
@@ -137,7 +140,10 @@ class CameraX():
             self.ib.setBackpressureStrategy(strategy)
             self.ib.setTargetRotation(self.rotation)
             self.imageAnalysis = self.ib.build()
-            self.te = context.getMainExecutor()
+            if api_version < 28:
+                self.te = ContextCompat.getMainExecutor(context)
+            else:
+                self.te = context.getMainExecutor()
             self.wrapper = CallbackWrapper(self.callback)  
             self.iaa = ImageAnalysisAnalyzer(self.wrapper)
             self.imageAnalysis.setAnalyzer(self.te, self.iaa)
@@ -236,14 +242,26 @@ class CameraX():
             dt = datetime.datetime.now()
             today = dt.strftime("%Y_%m_%d")
             name = dt.strftime("%H_%M_%S") + '.mp4'
-            if self.private:
-                dir = join(app_storage_path(), Environment.DIRECTORY_DCIM)
+            if self.private or api_version < 29:
+                if self.private:
+                    root = app_storage_path()
+                else:
+                    root = primary_external_storage_path()
+                    if not root:
+                        self.callback("ERROR: No external storage")
+                        return
+                dir = join(root, Environment.DIRECTORY_DCIM)
                 if not exists(dir):
                     mkdir(dir)
+                if not self.private:
+                    dir = join(dir,self.app_name())
+                    if not exists(dir):
+                        mkdir(dir)
                 dir = join(dir,today)
                 if not exists(dir):
                     mkdir(dir)
                 self.filepath = join(dir,name)
+                self.name_pipe.append(self.filepath)
                 self.videofile = File(self.filepath)
                 self.vcf = VideoCaptureOutputFileOptionsBuilder(self.videofile).build()
             else:
@@ -253,13 +271,15 @@ class CameraX():
                 self.cv.put(MediaStoreMediaColumns.DISPLAY_NAME, name)
                 self.cv.put(MediaStoreMediaColumns.MIME_TYPE, "video/mp4")
                 self.cv.put(MediaStoreMediaColumns.RELATIVE_PATH,
-                            join(Environment.DIRECTORY_DCIM,
-                                 self.app_name(),today))
+                            join(Environment.DIRECTORY_DCIM, self.app_name(),today))
                 self.vcf = VideoCaptureOutputFileOptionsBuilder(self.cr,
                                                                 collection,
                                                                 self.cv).build()
-            self.te = context.getMainExecutor()
-            self.wrapper = CallbackWrapper(self.callback)  
+            if api_version < 28:
+                self.te = ContextCompat.getMainExecutor(context)
+            else:
+                self.te = context.getMainExecutor()
+            self.wrapper = CallbackWrapper(self.callback_wrapper)  
             self.vsc = VideoSavedCallback(self.wrapper)
             self.imageCapture.startRecording(self.vcf,self.te,self.vsc)
             self.video_is_recording = not self.video_is_recording
@@ -270,14 +290,27 @@ class CameraX():
         dt = datetime.datetime.now()
         today = dt.strftime("%Y_%m_%d")
         name = dt.strftime("%H_%M_%S") + '.jpg'
-        if self.private:
-            dir = join(app_storage_path(), Environment.DIRECTORY_DCIM)
+
+        if self.private or api_version < 29:
+            if self.private:
+                root = app_storage_path()
+            else:
+                root = primary_external_storage_path()
+                if not root:
+                    self.callback("ERROR: No external storage")
+                    return
+            dir = join(root, Environment.DIRECTORY_DCIM)
             if not exists(dir):
                 mkdir(dir)
+            if not self.private:
+                dir = join(dir,self.app_name())
+                if not exists(dir):
+                    mkdir(dir)
             dir = join(dir,today)
             if not exists(dir):
                 mkdir(dir)
             self.filepath = join(dir,name)
+            self.name_pipe.append(self.filepath)
             self.picfile = File(self.filepath)
             self.icf = ImageCaptureOutputFileOptionsBuilder(self.picfile).build()
         else:
@@ -287,16 +320,27 @@ class CameraX():
             self.cv.put(MediaStoreMediaColumns.DISPLAY_NAME, name)
             self.cv.put(MediaStoreMediaColumns.MIME_TYPE, "image/jpeg")
             self.cv.put(MediaStoreMediaColumns.RELATIVE_PATH,
-                        join(Environment.DIRECTORY_DCIM,
-                             self.app_name(),today))
+                        join(Environment.DIRECTORY_DCIM, self.app_name(),today))
             self.icf = ImageCaptureOutputFileOptionsBuilder(self.cr,
                                                             collection,
                                                             self.cv).build()
-
-        self.te = context.getMainExecutor()
-        self.wrapper = CallbackWrapper(self.callback)  
+        if api_version < 28:
+            self.te = ContextCompat.getMainExecutor(context)
+        else:
+            self.te = context.getMainExecutor()
+        self.wrapper = CallbackWrapper(self.callback_wrapper)  
         self.isc = ImageSavedCallback(self.wrapper)
         self.imageCapture.takePicture(self.icf,self.te,self.isc)
+
+    def callback_wrapper(self, file_id):
+        if not file_id:
+            # The callback returns "" for non-MediaStore saves
+            if self.name_pipe:
+                file_id = self.name_pipe[0]
+                self.name_pipe = self.name_pipe[1:]
+            else:
+                return # something is wrong
+        self.callback(file_id)
 
     def app_name(self):
         context = PythonActivity.mActivity.getApplicationContext()

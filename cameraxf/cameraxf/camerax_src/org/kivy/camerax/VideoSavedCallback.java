@@ -19,8 +19,8 @@ public class VideoSavedCallback implements OnVideoSavedCallback {
 
     public void onVideoSaved(OutputFileResults outputFileResults){
 	Uri saveuri = outputFileResults.getSavedUri();
+	String result = "";
 	if (saveuri != null) {
-	    String result = "";
 	    if (saveuri.getScheme().equals("content")) {
 		Context context =
 		    PythonActivity.mActivity.getApplicationContext();
@@ -37,10 +37,13 @@ public class VideoSavedCallback implements OnVideoSavedCallback {
 		cursor.close();
 		result = file_path + file_name; 
 	    } else {
-	        result = saveuri.toString();
+		// This case was removed from outputFileResults forImage
+		// but not for Video in rc03.
+		// For consistency we ignore it here , and return "" 
+	        // result = saveuri.toString();
 	    }
-	    this.callback_wrapper.callback_string(result);
 	}
+	this.callback_wrapper.callback_string(result);
     }
 	
     public void onError(int videoCaptureError, String message, Throwable cause){

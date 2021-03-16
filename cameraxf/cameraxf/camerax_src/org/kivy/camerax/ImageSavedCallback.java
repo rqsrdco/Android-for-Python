@@ -20,8 +20,8 @@ public class ImageSavedCallback implements OnImageSavedCallback {
 
     public void onImageSaved(OutputFileResults outputFileResults){
 	Uri saveuri = outputFileResults.getSavedUri();
+	String result = "";
 	if (saveuri != null) {
-	    String result = "";
 	    if (saveuri.getScheme().equals("content")) {
 		Context context =
 		    PythonActivity.mActivity.getApplicationContext();
@@ -38,10 +38,13 @@ public class ImageSavedCallback implements OnImageSavedCallback {
 		cursor.close();
 		result = file_path + file_name; 
 	    } else {
-	        result = saveuri.toString();
+		// This case was removed from outputFileResults for Image
+		// but not for Video in rc03. Currently not used.
+		// We ignore the 'never called' result in case this changes
+	        // result = saveuri.toString();
 	    }
-	    this.callback_wrapper.callback_string(result); 
 	}
+	this.callback_wrapper.callback_string(result); 
     }
 	
     public void onError(ImageCaptureException exception) {

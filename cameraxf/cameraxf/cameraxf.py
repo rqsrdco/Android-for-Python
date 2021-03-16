@@ -154,7 +154,7 @@ class CameraXF(ModalView):
             flash = flash,
             optimize = optimize,
             zoom = zoom,
-            privatex = private_storage)   
+            private = private_storage)   
 
         ##############################
         # Initialize Camera

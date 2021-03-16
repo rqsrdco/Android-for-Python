@@ -15,6 +15,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from android.permissions import request_permissions, check_permission, \
     Permission
+from android import api_version    
 from cameraxf import CameraXF
 from toast import Toast
 if add_qrreader:
@@ -25,8 +26,11 @@ class MyApp(App):
     def build(self):
         self.cameraxf = None
         self.qrreader = None
-        request_permissions([Permission.CAMERA,
-                             Permission.RECORD_AUDIO])
+        permissions = [Permission.CAMERA, Permission.RECORD_AUDIO]
+        if api_version < 29:
+            # Use File System not MediaStore
+            permissions.append(Permission.WRITE_EXTERNAL_STORAGE)
+        request_permissions(permissions)
         l0 = Label(text=
                    'Dismiss a camera with the\nback button or a back gesture')
         b1 = Button(text= 'Tap for Photo Camera', on_press = self.camera_photo)
@@ -44,17 +48,21 @@ class MyApp(App):
 
     def camera_photo(self,b):
         if check_permission(Permission.CAMERA):
-            self.cameraxf = CameraXF(capture='photo',
-                                     flash='auto',
-                                     callback=self.captured)
-            self.cameraxf.bind(on_dismiss=self._dismissed)
+            if api_version > 28 or\
+               check_permission(Permission.WRITE_EXTERNAL_STORAGE):
+                self.cameraxf = CameraXF(capture='photo',
+                                         flash='auto',
+                                         callback=self.captured)
+                self.cameraxf.bind(on_dismiss=self._dismissed)
 
     def camera_video(self,b):
         if check_permission(Permission.CAMERA) and\
            check_permission(Permission.RECORD_AUDIO):
-            self.cameraxf = CameraXF(capture='video',
-                                     callback=self.captured)
-            self.cameraxf.bind(on_dismiss=self._dismissed)
+            if api_version > 28 or\
+               check_permission(Permission.WRITE_EXTERNAL_STORAGE):
+                self.cameraxf = CameraXF(capture='video',
+                                         callback=self.captured)
+                self.cameraxf.bind(on_dismiss=self._dismissed)
 
     def camera_mirror(self,b):
         if check_permission(Permission.CAMERA):
