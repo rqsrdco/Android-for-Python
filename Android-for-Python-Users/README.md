@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/03/15
+Revised 2021/03/19
 
 # Introduction
 
@@ -210,6 +210,10 @@ KivyMD is in development, which means some functionality [is still changing](htt
 
 The Kivy Camera widget does not work on Android, neither does the OpenCV camera. Try the [Xcamera widget](https://github.com/kivy-garden/xcamera) from the Kivy Garden, it still has issues but is currently the only choice for an camera preview as part of a layout. Another option is [CameraXF](https://github.com/RobertFlatt/Android-for-Python/tree/main/cameraxf), a turnkey full screen photo, video, and image analysis camera.
 
+## Back Button and Gesture
+
+On Android a back button/gesture pauses an app. From Kivy it does not appear possible to overload this behavior. Anybody know a way?
+
 ## Kivy Lifecycle
 
 Follow the [Kivy Lifecycle](https://kivy.org/doc/stable/guide/basic.html#kivy-app-life-cycle), it abstracts the app behavior that Android expects.
@@ -226,11 +230,12 @@ P4a provides Android specific utilities in the android package, this is only ava
 
 ## Plyer
 
-Plyer is an OS independent api for some non-POSIX OS features. See [available features](https://github.com/kivy/plyer#supported-apis)
+Plyer is an OS independent api for some non-POSIX OS features. See [available features](https://github.com/kivy/plyer#supported-apis).
 
-The [Plyer examples](https://github.com/kivy/plyer/tree/master/examples) are the documentation
+The [Plyer examples](https://github.com/kivy/plyer/tree/master/examples) are the documentation. Some Plyer examples work on Android but not all Android versions, for example Camera, Speech to text, Storage. Also some run time permissions are missing.
 
-On Android some Plyer features are not available on all apis. If you plan to use Plyer, first try a small test case with your target api version. If it does what you expect, check that all the features you need are available; as Plyer has a platform lowest common denominator design.
+If you plan to use Plyer, and the idea of it is very appealing, first try a small test case on your target Android versions. If it does what you expect, check that all the features you need are available; as Plyer has a platform lowest common denominator design.
+
 
 ## Pyjnius
 
