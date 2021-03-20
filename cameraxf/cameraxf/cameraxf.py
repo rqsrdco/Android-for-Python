@@ -40,13 +40,20 @@
 # callback must be a user supplied method with the signature:
 #                              def callbackname(self, argument):
 # For 'photo' and 'video' the argument is a string containing either
-#    a file path, a content uri, or an error (starts with 'ERROR:')
+#    a file path, a MediaStore reference, or an error (starts with 'ERROR:')
+#    On devices running Android 9 or less, the file path is of the form
+#    '/somepath/DCIM/AppName/Date/Time.jpg'.
+#    On devices running Android 10 more, the MediaStore reference is of the form
+#    'DCIM/AppName/Date/Time.jpg' where 'DCIM/AppName/Date/' is the
+#    'RELATIVE_PATH' and 'Time.jpg' is the 'DISPLAY_NAME'. 
 # For 'data' the argument is a Java ImageProxy: androidx.camera.core.ImageProxy
 #
 # Run time permissions in build()
 #   RECORD_AUDIO is only required for 'video'
-#   WRITE_EXTERNAL_STORACE maybe required for private storage whan api <=28
-#   request_permissions([Permission.CAMERA,Permission.RECORD_AUDIO])
+#   WRITE_EXTERNAL_STORACE is required for storage whan api <=28 and should
+#   not be requested when api>= 30
+#   request_permissions([Permission.CAMERA,Permission.RECORD_AUDIO,
+#                        Permission.WRITE_EXTERNAL_STORAGE])
 #
 # Source https://github.com/RobertFlatt/Android-for-Python/cameraxf
 #
