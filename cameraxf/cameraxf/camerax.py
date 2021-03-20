@@ -116,7 +116,11 @@ class CameraX():
         # CameraProvider
         context =  cast('android.content.Context',
                         PythonActivity.mActivity.getApplicationContext())
-        cpf = ProcessCameraProvider.getInstance(context)
+        try:
+            cpf = ProcessCameraProvider.getInstance(context)
+        except Exception as e:
+            print('ERROR CameraX.bind_camera():\n' + str(e))
+            
         self.cameraProvider = cpf.get()
         self.cameraProvider.unbindAll()
 
