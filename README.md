@@ -11,7 +11,7 @@ An unofficial [Users' Guide](https://github.com/RobertFlatt/Android-for-Python/t
 
 ## Storage
 
-How to use Android Shared Storage for api >=29
+How to use Android Shared Storage for api >= 21
 Source directory [storage](https://github.com/RobertFlatt/Android-for-Python/tree/main/storage).
 
 ## Send a Share
