@@ -1,10 +1,10 @@
 # Storage
 
-*Shared storage on api >= 29.*
+*Shared storage, now available on device api >= 21*
 
-On Android api >= 29 shared storage is a database not a Linux file system. Private storage is still a Linux file system. [storage.py](https://github.com/RobertFlatt/Android-for-Python/blob/main/storage/storage.py) implements an api for database access of this app's public storage.
+On Android shared storage is a database not a Linux file system. Private storage is a Linux file system. [storage.py](https://github.com/RobertFlatt/Android-for-Python/blob/main/storage/storage.py) implements an api for database access of this app's public storage.
 
-The shared storage operations provided are insert(), delete(), and recieve(), these copy files between this app's private and shared storage.
+The shared storage operations provided are insert(), delete(), and recieve(), these copy files between this app's private and shared storage. [More details.](https://github.com/RobertFlatt/Android-for-Python/blob/main/storage/API_STORAGE_README.txt))
 
 Use of the Android file picker to copy files from other app's shared storage is shown.
 

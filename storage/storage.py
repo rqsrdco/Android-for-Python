@@ -1,6 +1,8 @@
-from android import mActivity, autoclass, cast
-from os.path import splitext,join, basename, exists
-from os import mkdir
+from android import mActivity, autoclass, cast, api_version
+from android.storage import primary_external_storage_path
+from os.path import splitext,join, basename, exists, isfile
+from os import mkdir, remove, access, W_OK
+from shutil import copy
 
 FileOutputStream = autoclass('java.io.FileOutputStream')
 FileInputStream = autoclass('java.io.FileInputStream')
@@ -10,7 +12,8 @@ MediaStoreFiles = autoclass('android.provider.MediaStore$Files')
 MediaStoreAudioMedia = autoclass('android.provider.MediaStore$Audio$Media')
 MediaStoreImagesMedia = autoclass('android.provider.MediaStore$Images$Media')
 MediaStoreVideoMedia = autoclass('android.provider.MediaStore$Video$Media')
-MediaStoreDownloads = autoclass('android.provider.MediaStore$Downloads')
+if api_version > 28:
+    MediaStoreDownloads = autoclass('android.provider.MediaStore$Downloads')
 MediaStoreMediaColumns = autoclass('android.provider.MediaStore$MediaColumns')
 ContentValues = autoclass('android.content.ContentValues')
 MimeTypeMap = autoclass('android.webkit.MimeTypeMap')
@@ -21,27 +24,33 @@ ContentUris = autoclass('android.content.ContentUris')
 # Source https://github.com/RobertFlatt/Android-for-Python/storage
 
 #########################
-# assumes api>=29
+# assumes build api>=29
 # api=30 recomended
 #########################
 
 class SharedStorage:
     # For shared media, documents, and downloads
     ############################################
+    # 
     # Shared Storage is a database, NOT a Linux file system.
+    # See notes below about implementation differences for devices using
+    # api <29
+    #
     # The database is organized in Root Directories
-    #  'Music'         is the Music directory
-    #  'Movies'        is the Movies directory
-    #  'Pictures'      is the Pictures directory
-    #  'Documents'     is the Documents directory
+    #  'Music'         
+    #  'Movies'        
+    #  'Pictures'      
+    #  'Documents'     
     #  '*'             (default) one of the first 4 depending on file extension
-    #  'Downloads'     is the Downloads directory
+    #  'Downloads'     
+    #  'DCIM'          For retrive of camara data. 
     #
     #  Within those Root Directories this app's public files are stored under
     #  its 'AppName'. Sub-directories are available.
     #
     # The database operations 'insert', 'retrieve', and 'delete' are
-    # implemented. An insert overwrites an existing entry.
+    # implemented. An insert overwrites an existing entry. Retrieve from
+    # storage created by other apps requires READ_EXTERNAL_STORAGE
     #
     # Entries are defined by Root Directory, optional sub-directory, and file
     # name.
@@ -50,14 +59,41 @@ class SharedStorage:
     # 
     # The api defaults to the 'external' volume, 'internal' is available.
     #
-    # No Android permissions are required to operate on this app's
-    # SharedStorage.
+    # Device api<29 requires WRITE_EXTERNAL_STORAGE
     #
-    # The api can retrive from a location in Shared Storage that is not owned by
-    # this app. This requires READ_EXTERNAL_STORAGE permission.
+    # Files in 'Downloads' do not have a uri if device api < 29
     #
     # Two additional methods enable interoperability with the Android
     # 'android.net.Uri' class.
+    #
+    # ######## Android Version Transition, Read me, Really ###############
+    #
+    # The api above is consistent from device api = 21 to at least api = 30.
+    # However the internal implementation is different between devices with
+    # api >= 29 and api < 29. This is a characteristic of Android storage.
+    # See for example
+    #  https://www.raywenderlich.com/10217168-preparing-for-scoped-storage
+    #
+    # On new Android versions the file is owned by the database, on older
+    # Android versions the file is owned by the app.
+    # Thus when device api < 29 , a file can be deleted by the user but the
+    # data base entry may still exist. And retrieve() will return ""
+    #
+    # On newer devices the datebase key for file path is RELATIVE_PATH
+    # on older devices it is DATA which is now depreciated.
+    #
+    # The two implementations require special handling of the user's
+    # data when the user moves files to a platorm with api >= 29 from one with
+    # api < 29. This is a general Android issue and not specific to this
+    # module.
+    #
+    # The transition handling might involve:
+    # Before transition 1) Copy the app's shared files to private storage.
+    #                   2) Delete the app's database entries
+    # After transition  3) Insert the copies into the database
+    #                   4) Delete the copied files.
+    # If 1) and 2) are done after the transition, before doing 3) manually
+    # delete the shared files
     #
     ###################
     #
@@ -84,9 +120,8 @@ class SharedStorage:
     # retrieve(file_name           
     #        root_dir = '*'      
     #        sub_dir = '',       
-    #        volume = 'external',
-    #        this_app  = True)    # False requires READ_EXTERNAL_STORAGE, and
-    #                             # sub_dir[0] may be another app's name. 
+    #        app_name = '',    requires READ_EXTERNAL_STORAGE   
+    #        volume = 'external')
     #                returns a PrivateStorage file path, or a URL string
     #
     # delete(file_name,          
@@ -98,10 +133,10 @@ class SharedStorage:
     # getUri(file_name,          
     #        root_dir = '*',     
     #        sub_dir = '',       
-    #        volume = 'external',
-    #        this_app  = True)    # False requires READ_EXTERNAL_STORAGE, and
-    #                             # sub_dir[0] may be another app's name. 
+    #        app_name = '',    requires READ_EXTERNAL_STORAGE   
+    #        volume = 'external')
     #                   returns a Uri ('android.net.Uri')
+    #                   Except if 'Downloads' and device api <29, returns None
     #
     # retrieveUri(uri) #A 'android.net.Uri' from some other Android Activity
     #                   returns a PrivateStorage file path.
@@ -112,16 +147,27 @@ class SharedStorage:
     # Where txt_file could be PrivateStorage().getFilesDir() + 'text.txt'
     # and so on.
     # All methods take a required file name, and optional directory parameters.
-    #  
+    #
+    #   Insert:
     #   SharedStorage().insert(txt_file, 'Documents')
     #   SharedStorage().insert(txt_file, sub_dir= 'a/b')
     #   SharedStorage().insert(txt_file, 'Downloads')
     #   SharedStorage().insert(jpg_file, 'Pictures')
     #   SharedStorage().insert(mp3_file)
     #   SharedStorage().insert(ogg_file, 'Music')
+    #
+    #   Retrieve:
     #   path = SharedStorage().retrieve('test.txt')
-    #   path = SharedStorage().retrieve('test.txt', sub_dir = 'a/b')
+    #   path = SharedStorage().retrieve('test.txt', 'Documents', 'a/b')
+    #
+    #   Delete:
     #   SharedStorage().delete('test.mp3', 'Music')
+    #
+    #   Retrieve from another app's storage (requires READ_EXTERNAL_STORAGE) :
+    #   SharedStorage().retrieve('10_28_14.jpg', 'DCIM', '2021_03_12',
+    #                            'CameraXF')
+    #   SharedStorage().retrieve('10_33_48.mp4', 'DCIM', '2021_03_12',
+    #                            'CameraXF')
     #
     #######################
 
@@ -133,32 +179,56 @@ class SharedStorage:
             volume = volume.lower()
             if volume not in ['internal', 'external']:
                 volume = 'external'
+            if not exists(file_path) or not isfile(file_path):
+                return success
             file_name = basename(file_path)
             # delete existing
             self.delete(file_name, root_dir, sub_dir, volume)
-            # build MediaStore data
+            # build MediaStore data for everything except Downloads on api< 29
             MIME_type = self._get_file_MIME_type(file_name)
-            root_directory = self._get_root_directory(root_dir, MIME_type)  
+            root_directory = self._get_root_directory(root_dir, MIME_type)
             sub_directory = join(root_directory, self._app_name())
             if sub_dir:
-                sub_dirs = sub_dir.split('/')
-                for s in sub_dirs:
-                    sub_directory = join(sub_directory,s)
-            root_uri = self._get_root_uri(root_directory, volume)
+                sub_directory = join(sub_directory,sub_dir)
+            root_uri = self._get_root_uri(root_directory, volume, MIME_type)
             cv = ContentValues()
-            cv.put(MediaStoreMediaColumns.DISPLAY_NAME, file_name)
-            cv.put(MediaStoreMediaColumns.MIME_TYPE, MIME_type)  
-            cv.put(MediaStoreMediaColumns.RELATIVE_PATH, sub_directory)
-            # copy file
-            context = mActivity.getApplicationContext()    
-            uri = context.getContentResolver().insert(root_uri, cv)
-            ws  = context.getContentResolver().openOutputStream(uri)
-            rs = FileInputStream(file_path)
-            FileUtils.copy(rs,ws)
-            ws.flush()
-            ws.close()
-            rs.close()
-            success = bool(self.getUri(file_name, root_dir, sub_dir, volume))
+            if api_version > 28:
+                if exists(join(sub_directory,file_name)) and\
+                   not access(join(sub_directory,file_name), W_OK):
+                    # the delete above failed probably due to an Android OS upgrade
+                    # from <= 28 to > 28.
+                    # See 'Android version transition' above
+                    print('ERROR SharedStorage.insert():\n' +\
+                          'Unable to insert file due to Android version transition\n'+\
+                          'See Android Version Transition in API_STORAGE_README.txt')
+                    return False
+                cv.put(MediaStoreMediaColumns.DISPLAY_NAME, file_name)
+                cv.put(MediaStoreMediaColumns.MIME_TYPE, MIME_type)  
+                cv.put(MediaStoreMediaColumns.RELATIVE_PATH, sub_directory)
+                # copy file
+                context = mActivity.getApplicationContext()    
+                uri = context.getContentResolver().insert(root_uri, cv)
+                ws  = context.getContentResolver().openOutputStream(uri)
+                rs = FileInputStream(file_path)
+                FileUtils.copy(rs,ws)    
+                ws.flush()
+                ws.close()
+                rs.close()
+                success = bool(self.getUri(file_name, root_dir, sub_dir,'',
+                                           volume))
+            else:
+                sub_directory = self._create_pre_29_directory(root_directory,
+                                                              sub_dir)
+                copy(file_path, sub_directory)
+                new_file_path = join(sub_directory,file_name)
+                if root_directory == Environment.DIRECTORY_DOWNLOADS:
+                    success = exists(new_file_path)
+                else:
+                    cv.put(MediaStoreMediaColumns.DISPLAY_NAME, file_name)
+                    cv.put(MediaStoreMediaColumns.DATA, new_file_path)
+                    context = mActivity.getApplicationContext()    
+                    uri = context.getContentResolver().insert(root_uri, cv)
+                    success = exists(file_path) and bool(uri) 
         except Exception as e:
             print('ERROR SharedStorage.insert():\n' + str(e))
         return success
@@ -168,20 +238,50 @@ class SharedStorage:
                volume = 'external'):
         success = False
         try:
-            fileUri = self.getUri(file_name, root_dir, sub_dir, volume)
+            fileUri = self.getUri(file_name, root_dir, sub_dir, '', volume)
             if fileUri:
                 context = mActivity.getApplicationContext()
                 context.getContentResolver().delete(fileUri,None,None)
                 success = True
+            if not fileUri or api_version < 29:
+                # Not in the database, but a file might exist at the location
+                # equivalent to the database reference.
+                # So an insert would add a versioned display name 'xxx (n).yy'
+                # And this would break the 'replace' model we assume.
+                # Explicitly look for and remove the file system entry.
+                #
+                # If device api < 29 then the file is not removed by the
+                # database delete(), so explicitly remove if present.
+                if not primary_external_storage_path():
+                    return success
+                file_path = self._equivalent_file(file_name,root_dir,sub_dir)
+                if exists(file_path):
+                    # write access ?
+                    if access(file_path, W_OK):
+                        remove(file_path)
+                    success = not exists(file_path)
         except Exception as e:
             print('ERROR SharedStorage.delete():\n' + str(e))
         return success
             
     # copy SharedStorage entry to PrivateStorage cacheDir, return its file_path
     def retrieve(self, file_name, root_dir = '*', sub_dir = '', 
-                 volume = 'external', this_app = True):
-        uri = self.getUri(file_name, root_dir, sub_dir, volume, this_app)
-        return self.retrieveUri(uri)
+                 app_name = '', volume = 'external'):
+        result = ""
+        if api_version > 28:
+            uri = self.getUri(file_name, root_dir, sub_dir, app_name, volume)
+            result = self.retrieveUri(uri)
+        else:
+            # don't need the db to find the file, we know where it is.
+            if not primary_external_storage_path():
+                return result
+            file_path = self._equivalent_file(file_name,root_dir,sub_dir,
+                                              app_name)
+            if exists(file_path):
+                new_file_path = self._save_to()
+                copy(file_path,new_file_path)
+                result = join(new_file_path, file_name)
+        return result
 
     # from Android 'android.net.Uri' class
     # for 'content' and 'file' uris copy the file to PrivateStorage
@@ -207,14 +307,8 @@ class SharedStorage:
                 else:
                     #https://en.wikipedia.org/wiki/List_of_URI_schemes
                     return someUri.toString()
-                # Save to
-                new_file_path = PrivateStorage().getCacheDir()
-                if not new_file_path:
-                    new_file_path = PrivateStorage().getCacheDir('internal')
-                new_file_path = join(new_file_path,"MediaStore")
-                if not exists(new_file_path):
-                    mkdir(new_file_path)
-                new_file_path= join(new_file_path, file_name)
+                new_file_loc = self._save_to()
+                new_file_path= join(new_file_loc, file_name)
                 # Copy
                 rs = mActivity.getContentResolver().openInputStream(someUri)
                 ws = FileOutputStream(new_file_path)
@@ -228,30 +322,36 @@ class SharedStorage:
         
     # get a Java android.net.Uri 
     def getUri(self, file_name, root_dir = '*', sub_dir = '', 
-               volume = 'external', this_app = True):
+               app_name = '', volume = 'external'):
         fileUri = None
         try:
+            if api_version < 29 and root_dir.lower() in ['downloads',
+                                                         'download']:
+                return None
             volume = volume.lower()
             if volume not in ['internal', 'external']:
                 volume = 'external'
             MIME_type = self._get_file_MIME_type(file_name)
-            root_directory = self._get_root_directory(root_dir,MIME_type) 
-            root_uri = self._get_root_uri(root_directory, volume)
-            location = root_directory
-            if this_app:
+            root_direct = self._get_root_directory(root_dir,MIME_type)
+            root_uri = self._get_root_uri(root_direct, volume, MIME_type)
+            location = root_direct
+            if app_name:
+                location = join(location,app_name)
+            else:
                 location = join(location,self._app_name())
             if sub_dir:
-                sub_dirs = sub_dir.split('/')
-                for s in sub_dirs:
-                    location = join(location,s)
-            location = join(location,"")
-
+                location = join(location,sub_dir)
             selection = MediaStoreMediaColumns.DISPLAY_NAME+" LIKE '"+\
                 file_name+"'"
             selection += " AND "
-            selection += MediaStoreMediaColumns.RELATIVE_PATH+" LIKE '"+\
-                location+"'"
-
+            if api_version > 28: 
+                selection += MediaStoreMediaColumns.RELATIVE_PATH+" LIKE '"+\
+                    location+"/'"
+            else:
+                path = self._get_pre_29_directory(root_direct,sub_dir, app_name)
+                file_path = join(path,file_name)
+                selection += MediaStoreMediaColumns.DATA+" LIKE '"+\
+                    file_path+"'"
             context = mActivity.getApplicationContext()
             cursor = context.getContentResolver().query(root_uri,
                                                         None,
@@ -260,11 +360,17 @@ class SharedStorage:
                                                         None)
             while cursor.moveToNext():
                 dn = MediaStoreMediaColumns.DISPLAY_NAME
-                rp = MediaStoreMediaColumns.RELATIVE_PATH
                 index = cursor.getColumnIndex(dn)
                 fileName = cursor.getString(index)
-                dindex = cursor.getColumnIndex(rp)
-                dName = cursor.getString(dindex)
+                '''
+                # For debugging
+                if api_version < 29:
+                    ddn = MediaStoreMediaColumns.DATA
+                else:
+                    ddn = MediaStoreMediaColumns.RELATIVE_PATH
+                dindex = cursor.getColumnIndex(ddn)
+                dataName = cursor.getString(dindex)
+                '''
                 if file_name == fileName:
                     id_index = cursor.getColumnIndex(MediaStoreMediaColumns._ID)
                     id = cursor.getLong(id_index)
@@ -278,6 +384,47 @@ class SharedStorage:
     ###########
     # utilities
     ###########
+
+    def _equivalent_file(self,file_name,root_dir,sub_dir,app_name = ''):
+        MIME_type = self._get_file_MIME_type(file_name)
+        root_direct= self._get_root_directory(root_dir,MIME_type)
+        path = self._get_pre_29_directory(root_direct,sub_dir, app_name)
+        return join(path,file_name)
+
+    def _get_pre_29_directory(self,root,sub_dir, app_name = ''):
+        directory = join(primary_external_storage_path(),root)
+        if app_name:
+            directory = join(directory, app_name)
+        else:
+            directory = join(directory, self._app_name())
+        if sub_dir:
+            directory = join(directory,sub_dir)
+        return directory
+
+    def _create_pre_29_directory(self,root,sub_dir): 
+        directory = join(primary_external_storage_path(),root)
+        if not exists(directory):
+            mkdir(directory)
+        # we always enable this case through the api
+        directory = join(directory, self._app_name())
+        if not exists(directory):
+            mkdir(directory)
+        if sub_dir:
+            sub_dirs = sub_dir.split('/')
+            for s in sub_dirs:
+                directory = join(directory,s)
+                if not exists(directory):
+                    mkdir(directory)
+        return directory
+
+    def _save_to(self):
+        new_file_loc = PrivateStorage().getCacheDir()
+        if not new_file_loc:
+            new_file_loc = PrivateStorage().getCacheDir('internal')
+        new_file_loc = join(new_file_loc,"FromSharedStorage")
+        if not exists(new_file_loc):
+            mkdir(new_file_loc)
+        return new_file_loc
 
     def _get_file_MIME_type(self,file_name):
         try :
@@ -310,7 +457,7 @@ class SharedStorage:
             else:
                 root_dir = 'documents'
         root_dir = root_dir.lower()
-        if root_dir == 'downloads':
+        if root_dir in ['downloads','download']:
             root_directory = Environment.DIRECTORY_DOWNLOADS
         elif root_dir == 'pictures':
             root_directory = Environment.DIRECTORY_PICTURES
@@ -318,16 +465,23 @@ class SharedStorage:
             root_directory = Environment.DIRECTORY_MOVIES
         elif root_dir == 'music':
             root_directory = Environment.DIRECTORY_MUSIC
+        elif root_dir == 'dcim':
+            root_directory = Environment.DIRECTORY_DCIM
         else:
             root_directory = Environment.DIRECTORY_DOCUMENTS
         return root_directory
 
-    def _get_root_uri(self, root_directory, volume):
+    def _get_root_uri(self, root_directory, volume, MIME_type):
         if root_directory == Environment.DIRECTORY_DOWNLOADS:
-            root_uri = MediaStoreDownloads.getContentUri(volume)
-        elif root_directory == Environment.DIRECTORY_PICTURES:
+            if api_version < 29:
+                root_uri = None
+            else:
+                root_uri = MediaStoreDownloads.getContentUri(volume)
+        elif root_directory == Environment.DIRECTORY_PICTURES or\
+             (root_directory == Environment.DIRECTORY_DCIM and 'image/' in MIME_type):
             root_uri = MediaStoreImagesMedia.getContentUri(volume)
-        elif root_directory == Environment.DIRECTORY_MOVIES:
+        elif root_directory == Environment.DIRECTORY_MOVIES or\
+             (root_directory == Environment.DIRECTORY_DCIM and 'video/' in MIME_type):
             root_uri = MediaStoreVideoMedia.getContentUri(volume)
         elif root_directory == Environment.DIRECTORY_MUSIC:
             root_uri = MediaStoreAudioMedia.getContentUri(volume)
