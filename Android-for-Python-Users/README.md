@@ -284,7 +284,9 @@ Note: some documentation examples are obsolete. If you see '.renpy.' as a sub fi
 
 ## Other Ressouces
 [https://github.com/yunus-ceyhan](https://github.com/yunus-ceyhan)
+
 [https://github.com/adywizard](https://github.com/adywizard)
+
 [https://github.com/tshirtman](https://github.com/tshirtman)
 
 ## How to create a Release APK
