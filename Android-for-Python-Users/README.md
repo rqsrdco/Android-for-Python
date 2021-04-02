@@ -282,7 +282,7 @@ Note: some documentation examples are obsolete. If you see '.renpy.' as a sub fi
 
 [Android for Python](https://github.com/RobertFlatt/Android-for-Python) contains examples of some Android features as used from Python (and this document). These examples only run on Android.
 
-## Other Ressouces
+## Other Resources
 [https://github.com/yunus-ceyhan](https://github.com/yunus-ceyhan)
 
 [https://github.com/adywizard](https://github.com/adywizard)
