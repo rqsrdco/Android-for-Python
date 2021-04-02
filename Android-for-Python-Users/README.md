@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/03/19
+Revised 2021/04/01
 
 # Introduction
 
@@ -94,17 +94,23 @@ See any of the nearby examples.
 # Buildozer and p4a
 
 ## Install
-[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), really. Errors during a Buildozer build are usually a failure to [read the install instructions](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), or an attempt to build an impure Python package.
+[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), really. Errors during a Buildozer build are usually because the user:
+
+* Failed to [read the install instructions](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), and so failed to install a dependency.
+
+* Failed to accept the Google License Agreements.
+
+* Attempted to build an impure Python package.
 
 Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL or VirtualBox to run Buildozer.
 
 Buildozer's behavior can be non-deterministic in any of these cases:
 
-It is run as root
+* It is run as root
 
-It is run on an NTFS partition mounted on a Linux system.
+* It is run on an NTFS partition mounted on a Linux system.
 
-There are Python style trailing comments in the buildozer.spec
+* There are Python style trailing comments in the buildozer.spec
 
 
 ## Changing buildozer.spec
@@ -275,6 +281,11 @@ Note: some documentation examples are obsolete. If you see '.renpy.' as a sub fi
 ## Android for Python
 
 [Android for Python](https://github.com/RobertFlatt/Android-for-Python) contains examples of some Android features as used from Python (and this document). These examples only run on Android.
+
+## Other Ressouces
+[https://github.com/yunus-ceyhan](https://github.com/yunus-ceyhan)
+[https://github.com/adywizard](https://github.com/adywizard)
+[https://github.com/tshirtman](https://github.com/tshirtman)
 
 ## How to create a Release APK
 
