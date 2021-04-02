@@ -39,7 +39,7 @@ class ShareRcv():
         self.intent = mActivity.getIntent()
         self.intent_handler(self.intent)
         activity.bind(on_new_intent=self.intent_handler)
-    
+
     def to_file(self,uri,MIME_type):
         try:
             file_path = SharedStorage().retrieveUri(uri)

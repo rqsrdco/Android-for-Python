@@ -68,8 +68,8 @@
     #
     # Database Operations:
     # insert()      - copy a PrivateStorage file into this app's SharedStorage.
-    # retrieve()    - copy a SharedStorage file to PrivateStorage, returns a
-    #                 file path. 
+    # retrieve()    - copy a SharedStorage file to PrivateStorage on device
+    #                 api>= 29 and return a file path, else return a file path.
     # delete()      - delete a file in this app's SharedStorage.
     #
     # Interoperability with Android 'android.net.Uri' class:

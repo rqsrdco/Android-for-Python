@@ -1,11 +1,12 @@
 from android import mActivity, autoclass, cast, api_version
 from android.storage import primary_external_storage_path
 from os.path import splitext,join, basename, exists, isfile
-from os import mkdir, remove, access, W_OK
+from os import mkdir, remove, access, W_OK, stat
 from shutil import copy
 
 FileOutputStream = autoclass('java.io.FileOutputStream')
 FileInputStream = autoclass('java.io.FileInputStream')
+ByteArrayOutputStream = autoclass('java.io.ByteArrayOutputStream')
 FileUtils        = autoclass('android.os.FileUtils')
 Environment = autoclass('android.os.Environment')
 MediaStoreFiles = autoclass('android.provider.MediaStore$Files')
@@ -20,6 +21,7 @@ MimeTypeMap = autoclass('android.webkit.MimeTypeMap')
 JString = autoclass('java.lang.String')
 Uri = autoclass('android.net.Uri')
 ContentUris = autoclass('android.content.ContentUris')
+StreamCopy = autoclass('org.kivy.storage.StreamCopy')
 
 # Source https://github.com/RobertFlatt/Android-for-Python/storage
 
@@ -43,7 +45,7 @@ class SharedStorage:
     #  'Documents'     
     #  '*'             (default) one of the first 4 depending on file extension
     #  'Downloads'     
-    #  'DCIM'          For retrive of camara data. 
+    #  'DCIM'          For retrive of camera data. 
     #
     #  Within those Root Directories this app's public files are stored under
     #  its 'AppName'. Sub-directories are available.
@@ -99,8 +101,8 @@ class SharedStorage:
     #
     # Database Operations:
     # insert()      - copy a PrivateStorage file into this app's SharedStorage.
-    # retrieve()    - copy a SharedStorage file to PrivateStorage, returns a
-    #                 file path. 
+    # retrieve()    - copy a SharedStorage file to PrivateStorage on device
+    #                 api>= 29 and return a file path, else return a file path. 
     # delete()      - delete a file in this app's SharedStorage.
     #
     # Interoperability with Android 'android.net.Uri' class:
@@ -301,21 +303,23 @@ class SharedStorage:
                     nameIndex = cursor.getColumnIndex(dn)
                     cursor.moveToFirst()
                     file_name = cursor.getString(nameIndex)
+                    new_file_path= join(self._save_to(), file_name)
+                    cr = mActivity.getContentResolver()
+                    rs = cr.openInputStream(someUri)
+                    if api_version > 28:
+                        ws = FileOutputStream(new_file_path)
+                        FileUtils.copy(rs,ws)
+                        ws.flush()
+                        ws.close()
+                    else:
+                        StreamCopy(rs, new_file_path)
+                    rs.close()
                     cursor.close()
                 elif scheme == 'file':
-                    file_name = basename(someUri.getPath())
+                    new_file_path = someUri.getPath()
                 else:
                     #https://en.wikipedia.org/wiki/List_of_URI_schemes
-                    return someUri.toString()
-                new_file_loc = self._save_to()
-                new_file_path= join(new_file_loc, file_name)
-                # Copy
-                rs = mActivity.getContentResolver().openInputStream(someUri)
-                ws = FileOutputStream(new_file_path)
-                FileUtils.copy(rs,ws)
-                ws.flush()
-                ws.close()
-                rs.close()
+                    new_file_path = someUri.toString()
         except Exception as e:
             print('ERROR SharedStorage.retrieveUri():\n' + str(e))
         return new_file_path
@@ -539,4 +543,5 @@ class PrivateStorage:
             if result:
                 result = result.toString()
         return str(result)
+
 

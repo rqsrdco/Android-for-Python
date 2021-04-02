@@ -4,3 +4,5 @@
 android.permissions = READ_EXTERNAL_STORAGE
 
 android.api = 30
+
+android.add_src = storage_src
