@@ -7,7 +7,7 @@ CameraXF
 
 CameraXF is a turnkey, full screen, photo, video, data analaysis camera.
 
-- It depends on an [unapproved p4a PR](https://github.com/kivy/python-for-android/pull/2385)
+- Yea! the p4a PR was approved. But this still depends on an [unapproved Buildozer PR](https://github.com/kivy/buildozer/pull/1311)
 
 - It depends on Google software, CameraX, that is in part 'release candidate' and in part 'alpha'. This Google software is currently being updated monthly. Google has a [list of supported devices](https://developer.android.com/training/camerax/devices).
 
