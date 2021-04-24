@@ -32,21 +32,21 @@ android.add_src = cameraxf/camerax_src
 # Check the current versions of those camera Gradle dependencies here:
 # https://developer.android.com/jetpack/androidx/releases/camera#dependencies
 
-android.gradle_dependencies = "androidx.camera:camera-core:1.0.0-rc04",
-   "androidx.camera:camera-camera2:1.0.0-rc04",
-   "androidx.camera:camera-lifecycle:1.0.0-rc04",
-   "androidx.camera:camera-view:1.0.0-alpha23",
+android.gradle_dependencies = "androidx.camera:camera-core:1.0.0-rc05",
+   "androidx.camera:camera-camera2:1.0.0-rc05",
+   "androidx.camera:camera-lifecycle:1.0.0-rc05",
+   "androidx.camera:camera-view:1.0.0-alpha24",
    "androidx.lifecycle:lifecycle-process:2.3.0"
+
+# Required for the androidx gradle_dependencies
+android.enable_androidx = True
 
 # use any one of these (arm64-v8a recomended):
 
 android.arch = armeabi-v7a, arm64-v8a, x86, or x86_64
 
-### These two lines download a custom p4a for use in this demo only
-### Until https://github.com/kivy/python-for-android/pull/2385 is approved
+### As of 2021/04/22 uses p4a develop version
 
-p4a.fork = RobertFlatt
-
-p4a.branch = enable_androidx_demo
+p4a.branch = develop
 
 
