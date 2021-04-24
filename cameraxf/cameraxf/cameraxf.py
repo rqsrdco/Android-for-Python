@@ -23,15 +23,32 @@
 #   facing = (string) 'back' or 'front',                   default 'back'
 #   callback = None                                      see *Callback* below
 #
-# This applies only to 'photo' , 'video' and 'data':
+# This applies only when capture = 'photo' , 'video' or 'data':
 #   aspect_ratio = (string) '4:3', '16:9' 
 #                                   default photo '4:3' , video or data '16:9'
+#   Preview image size will be the largest that can be contained
+#   within the available pixels on the screen given the aspect ratio.
 #
-# This applies only to 'data':
-#   DO NOT USE CameraX BEHAVIOR INCONSISTENT
-#   resolution = (tuple)  eg (1024,768) overides aspect_ratio if specified
+#   Photo and video image size will the largest provided by the
+#   chip that also meets the jpg and mp4 conventions and the aspect ratio.
 #
-# These apply only to 'photo' and 'video':
+#   Data analysis resolution is determined from the aspect ratio, and is
+#   documented by CameraX as a maximum of 1080p.
+#   The data analysis resolution will degrade gracefully and automatically
+#   as determined by the latency introduced by the app's analysis of the data.
+#
+# This applies only when capture = 'data':
+#   resolution = (tuple or list)  eg [640,480]
+#
+#   This overrides aspect_ratio with a specific maximum screen and data
+#   analysis resolution (and hence aspect ratio).
+#   Use if the analysis implementation expects a specific resolution; note that
+#   the actual resolution will be the the nearest supported by the image chip
+#   on the device, and may(?) be subject to the graceful degradation mechanism
+#   described above.
+#   The order of the parameters is not significant.
+#
+# These apply only when capture = 'photo' or 'video':
 #   private = (boolean) True use Private storage         default Public storage
 #   optimize = (string) 'latency', 'quality',              default 'latency'
 #   flash = (string) 'on', 'off', 'auto'                   default 'off'
@@ -48,10 +65,12 @@
 #    'RELATIVE_PATH' and 'Time.jpg' is the 'DISPLAY_NAME'. 
 # For 'data' the argument is a Java ImageProxy: androidx.camera.core.ImageProxy
 #
-# Run time permissions in build()
+# Android permissions:
+#   CAMERA is required
 #   RECORD_AUDIO is only required for 'video'
 #   WRITE_EXTERNAL_STORACE is required for storage whan api <=28 and should
 #   not be requested when api>= 30
+#   These permissions must be requestin in the app and buildozer.spec
 #   request_permissions([Permission.CAMERA,Permission.RECORD_AUDIO,
 #                        Permission.WRITE_EXTERNAL_STORAGE])
 #
@@ -62,6 +81,7 @@
 # sudo apt-get install gettext
 # 
 
+from kivy.core.window import Window
 from kivy.uix.modalview import ModalView
 from kivy.clock import Clock
 from functools import partial
@@ -127,8 +147,11 @@ class CameraXF(ModalView):
         if optimize not in ['latency','quality']:
             optimize = 'latency'
 
-        if resolution and resolution is tuple and len(resolution) == 2:
-            resolution = (max(resolution),min(resolution))
+        if resolution and\
+           (type(resolution) is tuple or type(resolution) is list) and\
+           len(resolution) == 2:
+            # camerax will resort these according to current orientation
+            resolution = [max(resolution),min(resolution)]
         else:
             resolution = None
 
@@ -177,12 +200,15 @@ class CameraXF(ModalView):
     def on_dismiss(self):
         if self.enable_dismiss:
             self.enable_dismiss = False
+            if self.layout:
+                self.layout.deactivate_listeners()
             self.video_stop()
             self._unbind_camera()
             if self.layout:
                 self.layout.destroy_layout()
             self.camerax = None
             self.layout = None
+            Clock.schedule_once(self.begone_you_black_screen)
 
     def on_size(self, instance, size):
         self.video_stop()
@@ -266,5 +292,11 @@ class CameraXF(ModalView):
     def _unbind_camera(self):
         if self.camerax:
             self.camerax.unbind_camera()
+
+    # Sometimes on_dismiss the calling Kivy code has a black screen,
+    # but its event loop is running.
+    # This workaround is scheduled to occur after on_dismiss.
+    def begone_you_black_screen(self,dt):
+        Window.update_viewport()            
 
 
