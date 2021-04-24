@@ -65,6 +65,8 @@ class TouchListener(PythonJavaClass):
     def __init__(self, callback):
         super().__init__()
         self.callback = callback
+        self.active = True
+
         self.context =  PythonActivity.mActivity.getApplicationContext()
         self.gesture_listener = GestureListener(self.callback)
         self.gesture_detector = GestureDetector(self.context,
@@ -76,10 +78,11 @@ class TouchListener(PythonJavaClass):
  
     @java_method('(Landroid/view/View;Landroid/view/MotionEvent;)Z')
     def onTouch(self, v, event):
-        if self.gesture_detector.onTouchEvent(event):
-            return True
-        if self.scale_detector.onTouchEvent(event):
-            return True 
+        if self.active:
+            if self.gesture_detector.onTouchEvent(event):
+                return True
+            if self.scale_detector.onTouchEvent(event):
+                return True 
         return False
 
 class ClickListener(PythonJavaClass):
@@ -88,10 +91,12 @@ class ClickListener(PythonJavaClass):
     def __init__(self, callback):
         super().__init__()
         self.callback = callback
+        self.active = True
 
     @java_method('(Landroid/view/View;)V')
     def onClick(self, view):
-        self.callback()
+        if self.active:
+            self.callback()
 
 class KeyListener(PythonJavaClass):
     __javainterfaces__ = ['android/view/View$OnKeyListener']
@@ -99,12 +104,14 @@ class KeyListener(PythonJavaClass):
     def __init__(self, callback):
         super().__init__()
         self.callback = callback
+        self.active = True
 
     @java_method('(Landroid/view/View;ILandroid/view/KeyEvent;)Z')
     def onKey(self, v, key_code, event):
         if event.getAction() == KeyEvent.ACTION_DOWN and\
            key_code == KeyEvent.KEYCODE_BACK: 
-            self.callback()
+            if self.active:
+               self.callback()
             return True
         return False
 
