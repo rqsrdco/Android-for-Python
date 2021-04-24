@@ -46,6 +46,11 @@ class LayoutXF():
         self.flipbutton = None
         self.imgview = None
         self.instantiated = False
+        self.touch_listener = None
+        self.key_listener = None
+        self.flip_listener = None
+        self.click_listener = None
+        self.visibility = None
     
     ##############################
     # Layout
@@ -166,6 +171,14 @@ class LayoutXF():
 
     @run_on_ui_thread   
     def orientation(self,capture,video,width,height):
+        if width > height:
+            # Remove status bar in Landscape mode
+            option = View.SYSTEM_UI_FLAG_FULLSCREEN
+        else:
+            option = View.SYSTEM_UI_FLAG_VISIBLE
+        window = PythonActivity.mActivity.getWindow()
+        window.getDecorView().setSystemUiVisibility(option)
+
         if capture:
             # TODO aspect is discrete depending on image encoding format.
             if self.aspect_ratio == '16:9':
@@ -232,3 +245,13 @@ class LayoutXF():
         if self.layout:
             parent = cast(ViewGroup, self.layout.getParent())
             if parent is not None: parent.removeView(self.layout)
+
+    def deactivate_listeners(self):
+        if self.key_listener:
+            self.key_listener.active = False
+        if self.touch_listener:
+            self.touch_listener.active = False
+        if self.click_listener:
+            self.click_listener.active = False
+        if self.flip_listener:
+            self.flip_listener.active = False
