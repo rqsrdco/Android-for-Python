@@ -12,6 +12,7 @@ PythonActivity = autoclass('org.kivy.android.PythonActivity')
 Environment = autoclass('android.os.Environment')
 File = autoclass('java.io.File')
 Size = autoclass('android.util.Size')
+Context = autoclass('android.content.Context')
 if api_version < 28:
     ContextCompat = autoclass('androidx.core.content.ContextCompat')
 # MediaStore
@@ -38,6 +39,9 @@ CameraSelector = autoclass('androidx.camera.core.CameraSelector')
 CameraSelectorBuilder = autoclass('androidx.camera.core.CameraSelector$Builder')
 ProcessLifecycleOwner = autoclass('androidx.lifecycle.ProcessLifecycleOwner')
 CameraInfo =autoclass('androidx.camera.core.CameraInfo')
+
+CameraChars = autoclass('android.hardware.camera2.CameraCharacteristics')
+CameraMetadata = autoclass('android.hardware.camera2.CameraMetadata')
 
 # Local Java
 ImageSavedCallback = autoclass('org.kivy.camerax.ImageSavedCallback')
@@ -110,8 +114,24 @@ class CameraX():
     ##############################
     # Android CameraX
     ##############################
+    def bind_camera(self,preview_view):
+        if self.analysis:
+            # Java class can't be set on ui thread
+            self.ia_wrapper = CallbackWrapper(self.callback)
+            self.set_degrees()
+            if self.resolution:
+                self.rresolution = []
+                if self.degrees in [0,180]:
+                    # Landscape
+                    self.rresolution.append(max(self.resolution))
+                    self.rresolution.append(min(self.resolution))
+                else:
+                    self.rresolution.append(min(self.resolution))
+                    self.rresolution.append(max(self.resolution))
+        self._bind_camera_ui(preview_view)
+
     @run_on_ui_thread        
-    def bind_camera(self,preview_view):   
+    def _bind_camera_ui(self,preview_view):   
         self.preview_view = preview_view   
         # CameraProvider
         context =  cast('android.content.Context',
@@ -137,8 +157,8 @@ class CameraX():
             strategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
             self.ib = ImageAnalysisBuilder()
             if self.resolution:
-                self.ib.setTargetResolution(Size(self.resolution[0],
-                                                 self.resolution[1]))
+                self.ib.setTargetResolution(Size(self.rresolution[0],
+                                                 self.rresolution[1]))
             else:
                 self.ib.setTargetAspectRatio(self.aspect_ratio)
             self.ib.setBackpressureStrategy(strategy)
@@ -148,8 +168,7 @@ class CameraX():
                 self.te = ContextCompat.getMainExecutor(context)
             else:
                 self.te = context.getMainExecutor()
-            self.wrapper = CallbackWrapper(self.callback)  
-            self.iaa = ImageAnalysisAnalyzer(self.wrapper)
+            self.iaa = ImageAnalysisAnalyzer(self.ia_wrapper)
             self.imageAnalysis.setAnalyzer(self.te, self.iaa)
 
         # ImageCapture
@@ -169,8 +188,8 @@ class CameraX():
         # Preview
         pb = PreviewBuilder()
         if self.analysis and self.resolution:
-            pb.setTargetResolution(Size(self.resolution[0],
-                                        self.resolution[1])) 
+            pb.setTargetResolution(Size(self.rresolution[0],
+                                        self.rresolution[1])) 
         elif self.capture or self.analysis:
             if self.aspect_ratio == AspectRatio.RATIO_4_3 or\
                self.aspect_ratio == AspectRatio.RATIO_16_9:
@@ -354,3 +373,40 @@ class CameraX():
         else:
             name = appinfo.nonLocalizedLabel.toString()
         return name
+
+
+    ##############################
+    # Orientation
+    ##############################
+    # Based on
+    # https://developers.google.com/ml-kit/vision/face-detection/android#using-a-media.image
+    # Seems overly complex, but I assume it must be that way.
+
+    def set_degrees(self):
+        # rotation compensation for analyzer
+        wm =  PythonActivity.mActivity.getWindowManager()
+        rotation = wm.getDefaultDisplay().getRotation()
+        is_front = self.lens_facing == CameraSelector.LENS_FACING_FRONT
+        cm = PythonActivity.mActivity.getSystemService(Context.CAMERA_SERVICE)
+        rotationCompensation = rotation *90
+        cameraId = self.cameraIdForLensFacing(cm, is_front)
+        chars = cm.getCameraCharacteristics(cameraId)
+        sensorOrientation = chars.get(CameraChars.SENSOR_ORIENTATION)
+        if is_front:
+            degrees = (sensorOrientation + rotationCompensation) % 360
+        else:
+            degrees = (sensorOrientation - rotationCompensation + 360) % 360
+        self.degrees = degrees
+
+    def cameraIdForLensFacing(self, cameraManager, isFrontFacing):
+        # Convert to CameraX enum using Camera2 CameraMetadata
+        if isFrontFacing:
+            lensFacingInteger = CameraMetadata.LENS_FACING_FRONT
+        else:
+            lensFacingInteger = CameraMetadata.LENS_FACING_BACK
+        for cameraId in cameraManager.getCameraIdList():
+            characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            cameraLensFacing = characteristics.get(CameraChars.LENS_FACING)
+            if cameraLensFacing == int(lensFacingInteger):
+                return cameraId
+        return '0'    
