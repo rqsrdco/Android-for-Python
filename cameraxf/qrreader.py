@@ -2,18 +2,13 @@ from pyzbar import pyzbar
 from jnius import autoclass
 from PIL import Image
 from toast import Toast
-from threading import Thread
+from threading import Thread, Event
 
 YuvOperations = autoclass('org.kivy.camerax.YuvOperations')
 Paint = autoclass('android.graphics.Paint')
 PaintStyle = autoclass('android.graphics.Paint$Style')
 Color  = autoclass('android.graphics.Color')
 PorterDuffMode = autoclass('android.graphics.PorterDuff$Mode')
-
-############################################
-# TODO
-#   This needs a review for latency
-############################################
 
 # On converting YUV_420_888
 # https://blog.minhazav.dev/how-to-convert-yuv-420-sp-android.media.Image-to-Bitmap-or-jpeg/
@@ -34,34 +29,50 @@ class QRReader():
         self.painttext.setStrokeWidth(1)
         self.painttext.setTextSize(50)
         self.busy = False
+        self.finished = False
+        self.image_available = Event()
+        Thread(target=self.manager).start()
+        
+    def __del__(self):        
+        self.finished = True
+        self.image_available.set()
 
     def analyze(self, image_proxy):
         if not self.busy:
             self.busy = True
-            Y = self.yuv_operations.ImageProxyToYBytesArray(image_proxy)
-            # Thread startup about 30ms 
-            Thread(target=self.worker,args=(image_proxy,Y)).start()
-        
-    def worker(self, image_proxy, Y):
-        ip_width = image_proxy.getWidth()
-        ip_height = image_proxy.getHeight()
-        rotation = self.cameraxf.camerax.rotation
-        # The cast takes about 40ms 
-        Y = bytes(Y)
-        pil_image = Image.frombytes(mode='L',size=(ip_width,ip_height),data=Y)
+            self.Y = self.yuv_operations.ImageProxyToYBytesArray(image_proxy)
+            self.im_size=(image_proxy.getWidth(),image_proxy.getHeight())
+            self.image_available.set()
+        image_proxy.close();
+
+    def manager(self):
+        while True:
+            self.image_available.wait()
+            self.image_available.clear()
+            if self.finished:
+                break
+            self.worker()
+
+    def worker(self):
+        # This cast takes about 40ms, is there a better way?
+        Y = bytes(self.Y)
+        pil_image = Image.frombytes(mode='L',size=self.im_size,data=Y)
 
         #Image.frombuffer("RGBX",len(imgData)+len(info),imgData+info)
         #pil_image = Image.frombytes(mode="YCbCr",size=(w,h),data=Yuv)
+        degrees = self.cameraxf.camerax.degrees
+        if degrees in [90, 270]:
+            degrees = 360 - degrees
+        ## 2ms
+        pil_image = pil_image.rotate(degrees, expand=1, resample=Image.BICUBIC)
+        im_width , im_height = pil_image.size
+        if degrees in [0,180]: 
+            # Landscape fit height
+            scale = self.cameraxf.height / im_height
+        else:
+            # Portrait fit width
+            scale = self.cameraxf.width / im_width        
 
-        if rotation % 2: # landscape
-            scale = self.cameraxf.height / ip_height
-        else: # portrait
-            ## 2ms
-            pil_image = pil_image.rotate(270, expand=1, resample=Image.BICUBIC)
-            ip_width = image_proxy.getHeight()
-            ip_height = image_proxy.getWidth()
-            scale = self.cameraxf.width / ip_width
-            
         # A decode takes about 80mS
         barcodes = pyzbar.decode(pil_image) #,w,h)
 
@@ -69,8 +80,8 @@ class QRReader():
         for barcode in barcodes:
             x, y, w, h = barcode.rect
             text = barcode.data.decode('utf-8')
-            offx = round((self.cameraxf.width - scale * ip_width)/2)
-            offy = round((self.cameraxf.height - scale * ip_height)/2)
+            offx = round((self.cameraxf.width - scale * im_width)/2)
+            offy = round((self.cameraxf.height - scale * im_height)/2)
             # In screen coordinates:
             left = round(x * scale) + offx
             top  = round(y * scale) + offy
