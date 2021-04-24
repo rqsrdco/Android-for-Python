@@ -14,6 +14,5 @@ public class ImageAnalysisAnalyzer implements ImageAnalysis.Analyzer {
 
     public void analyze(ImageProxy image) {
 	this.callback_wrapper.callback_image(image); 
-	image.close();
     }
 }
