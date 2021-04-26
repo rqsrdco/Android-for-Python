@@ -89,7 +89,11 @@ class QRReader():
             bottom = top + round(h * scale)
             textlen = self.painttext.measureText(text)
             textloc = left + round((right - left - textlen)/2)
-            found.append([left,top,right,bottom,text,textloc])            
+            found.append([left,top,right,bottom,text,textloc])
+
+        # Be quiet if rotating
+        if self.cameraxf.disable_annotate:
+            found = []
 
         # Write to screen
         # These operations are on a "android.view.SurfaceView"

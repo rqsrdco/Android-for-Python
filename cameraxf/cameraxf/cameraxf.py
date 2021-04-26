@@ -106,6 +106,7 @@ class CameraXF(ModalView):
         self.camerax = None
         self.layout = None
         self.enable_dismiss = True
+        self.disable_annotate = False
         ##############################
         # Option handling
         ##############################
@@ -160,7 +161,7 @@ class CameraXF(ModalView):
         if callback:
             if not ismethod(callback) or\
                len(signature(callback).parameters) !=1:
-                callbacb = None
+                callback = None
 
         ##############################
         # Create Camera
@@ -200,6 +201,7 @@ class CameraXF(ModalView):
     def on_dismiss(self):
         if self.enable_dismiss:
             self.enable_dismiss = False
+            self.disable_annotate = True
             if self.layout:
                 self.layout.deactivate_listeners()
             self.video_stop()
@@ -211,16 +213,19 @@ class CameraXF(ModalView):
             Clock.schedule_once(self.begone_you_black_screen)
 
     def on_size(self, instance, size):
+        self.disable_annotate = True
         self.video_stop()
         if self.layout and self.layout.instantiated:
             self.layout.orientation(self.capture, self.video,
                                     self.width,self.height)
             # This fixes the vertical stretch on rotation from
             # initial orientation
-            # Seems like a PreviewView:1.0.0-alpha20 issue,
+            # Seems like a PreviewView issue,
             # but maybe I just don't understand.
             if self.camerax:
                 self.camerax.bind_camera(self.layout.imgview)
+        self.disable_annotate = False
+
 
     def resume(self):
         # Required if the device is rotated between pause and resume
