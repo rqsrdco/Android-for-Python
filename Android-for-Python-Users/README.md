@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/04/01
+Revised 2021/05/09
 
 # Introduction
 
@@ -55,17 +55,19 @@ The install directory './' is also private storage, but files do not persist bet
 
 Do not confuse private with secure, on older Android versions it is possible for other apps to read private storage. In this case internal storage is more secure than external storage.
 
-No permissions are requires to read or write an app's Private Storage. [More on permissions below](#app-permissions)
+No permissions are requires to read or write an app's private storage. [More on permissions below](#app-permissions)
 
 ## Shared Storage
 
-Shared storage is visible to all apps, is persistent after the app is uninstalled, and implemented as a database. The nearby [storage example](https://github.com/RobertFlatt/Android-for-Python/tree/main/storage) demonstrates the database insert(), delete(), and retrieve() operations.
+Shared storage is visible to all apps, is persistent after an app is uninstalled. On devices running Android 10 and later shared storage is implemented as a database, you cannot access shared storage with POSIX file operations. The Kivy and KivyMD file choosers do not work, you must use the Android file picker.
+
+The nearby [storage example](https://github.com/RobertFlatt/Android-for-Python/tree/main/storage) demonstrates the database insert(), delete(), and retrieve() operations.
 
 Shared storage is organized based on root directories located in Android's 'Main Storage'. They are 'Music', 'Movies', 'Pictures', 'Documents', and 'Downloads'.
 
-No permissions are requires to read or write an app's own Shared Storage. Reading another app's Shared Storage requires READ_EXTERNAL_STORAGE permission.
+On devices running Android 10 and later no permissions are requires to read or write an app's own shared storage. Reading another app's shared storage requires READ_EXTERNAL_STORAGE permission.
 
-On devices running api < 29 the MediaStore database is flat, there are no simulated directories. The app designer has a choice to use this or the traditional file based primary shared storage. The best choice depends on the application. The MediaStore approach enables a share between apps (see next section), and data transfer is transparent when the user upgrades their device to 29 or greater. The file system approach provides the user with the familiar hierarchy, and requires WRITE_EXTERNAL_STORAGE permission.
+On devices running Android 9 and less, for shared storage, both file access and database access are available, though the database implementation is perhaps too basic. The best choice depends on the application. The database approach enables a file share with other apps (see next section), the file system approach provides the user with the familiar hierarchy, and requires WRITE_EXTERNAL_STORAGE permission.
 
 ## Sharing a file between apps
 
@@ -179,11 +181,13 @@ An install message INSTALL_FAILED_NO_MATCHING_ABIS means the apk was built for a
 
 # Debugging
 
-On the desktop your friends are the Python stack trace, and logging or print statements. It is no different on Android. To get these we [run the debugger](https://github.com/kivy/buildozer/blob/master/docs/source/quickstart.rst#run-my-application).
+On the desktop your friends are the Python stack trace, and logging or print statements. It is no different on Android. To get these we [run the debugger](https://kivy.org/doc/stable/guide/android.html#debugging-your-application-on-the-android-platform).
 
 First connect the device via USB, on the Android device enable 'Developer Mode' and 'USB debugging'.
 
-If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a-using-adb) Successful setup is indicated by log output similar to:
+If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a-using-adb)
+
+Successful setup is indicated by log output similar to:
 ```
 List of devices attached
 0A052FDE40019P  device
@@ -289,11 +293,11 @@ Note: some documentation examples are obsolete. If you see '.renpy.' as a sub fi
 
 [https://github.com/tshirtman](https://github.com/tshirtman)
 
-## How to create a Release APK
+## Android Store
+
+### How to create a Release APK
 
 [The instructions are here](https://github.com/kivy/kivy/wiki/Creating-a-Release-APK) but don't just follow the instructions, read all the annotated comments by HeRo002. The instructions are flawed, but in combination with the comments they are good.
-
-## Android Store
 
 Always build with the latest api and arm64-v8a when building for the Store.
 
@@ -301,7 +305,27 @@ Apparently one can upload an armeabi-v7a apk to the play store, but you must fir
 
 HeRo002 tells us what to [expect](https://github.com/kivy/buildozer/issues/1290).
 
-The store will soon require that apps are submitted as an [app bundle](https://developer.android.com/guide/app-bundle). Presumably this measn unzipping our apk(s) and rebuilding with bundletool. If anybody want to figure out the details of how to this, that would be great. Please publish instructions or a script.
+### How to create a Release Bundle (.aab)
+
+The store will soon require that apps are submitted as an [app bundle](https://developer.android.com/guide/app-bundle).
+
+Buildozer does not currently build .aab files. The following is a summary of a workaround posted on [Google Groups.](https://groups.google.com/g/kivy-users/c/LmoegwYuEEk/m/II-wuO-nAgAJ) This workaround only applies to single architecture bundles, there is no workaround for multi architecture bundles. Basically it specifies part of `project/.buildozer` as an Android Studio project, and lets Android Studio do the work (virtual machine users, also read the two extra items below):
+
+1) In Android Studio `File->Open <project>/.buildozer/android/platform/build-arm64-v8a/dists/<app_name>__arm64-v8a/`
+
+2) If Android Studio complains about a Build Tools version edit `<app_name>__arm64-v8/build.gradle` and change `BuildToolsVersion 31.0.0-rc2`  to `31.0.0.rc3` (or whatever is current).
+
+3) If Android Studio offers a Gradle plugin update (perhaps to `4.2.0`) then accept this update. This results in using Gradle 6.7.1 (in my case).
+
+4) Go to `Build->Generate Signed Bundle or APK`, select `Bundle` and follow the steps.
+
+
+If Buildozer was run on a virtual machine:
+
+1) copy `<project>/.buildozer/android/platform/build-arm64-v8a/dists/<app_name>__arm64-v8a/` to a desktop and open that in Android Studio.
+
+2) Android Studio will tell you the SDK tools path is wrong, and ask to fix it; do this.
+
 
 # Appendix A Using adb
 
