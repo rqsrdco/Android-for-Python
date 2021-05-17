@@ -32,7 +32,7 @@ class Picker():
             print('ERROR Picker.pick_file():\n' + str(e))        
 
     def intent_callback(self, requestCode, resultCode, intent):
-        if requestCode == self.REQUEST_CODE:
+        if resultCode and requestCode == self.REQUEST_CODE:
             try:
                 if intent:
                     self.callback(intent.getData())
