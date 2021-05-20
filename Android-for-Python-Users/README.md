@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/05/09
+Revised 2021/05/20
 
 # Introduction
 
@@ -130,17 +130,43 @@ There is no magic universal buildozer.spec, its configuration depends on the fun
 
 [RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/specifications.rst), really. And see the [KivyMD section](#kivymd).
 
+### package.domain
+
+This must contain exctly one period (.) surrounded by alpha numeric characters, do not use any other special characters. Anthing else will cause a Gradle fail.
+
 ### requirements
 
 This is basically the list of pip packages and the Python version that your app depends on. It is important that you understand what your app depends on. The current Buildozer default version for Kivy is obsolete, change it to:
 ```
 requirements = python3,kivy==2.0.0
 ```
-The list must be complete, to miss one item will be fatal. Some packages don't automatically references their dependencies, so these will have to be added as well. A common worst case example is adding 'requests' which becomes:
-```
-requirements = python3,kivy==2.0.0,requests,urllib3,chardet,idna
-```
-Be careful that the packages you add here are pure Python. If the package is not pure Python and does not have a [recipe in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes) then there is an issue. The options are to either rewrite the app, locally modify an existing recipe [see Appendix C](#appendix-c-locally-modifying-a-recipe), [create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst), or import the functionality from Java. None of these options are trivial. That is why it said AVOID DISAPPOINTMENT in [the Wheels section above](#wheels).
+The list must be complete, missing one item is the most common cause of a run time crash on Android.
+
+Some packages don't automatically references their dependencies, so these will have to be explicitly added. For example:
+
+`import requests` needs `requirements = python3,kivy==2.0.0,requests,urllib3,chardet,idna`
+
+Some Kivy widgets depend on other packages. For example:
+
+`from kivy.uix.videoplayer import VideoPlayer` needs `requirements = python3,kivy==2.0.0,ffpyplayer`
+
+`from kivy.core.audio import SoundLoader`  needs `requirements = python3,kivy==2.0.0,ffpyplayer,ffpyplayer_codecs` [to play .mp3](https://github.com/Sahil-pixel/kivy-with-mp3-on-android-).
+
+Some pip3 package names are not the same as the class name. For example:
+
+`from bs4 import BeautifulSoup` needs `requirements = python3,kivy==2.0.0,beautifulsoup4`
+
+The packages you add here **must be pure Python, or have a recipe** [in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes). If this is not the case, the options are to:
+
+* Rewrite the app
+
+* Locally modify an existing recipe [see Appendix C](#appendix-c-locally-modifying-a-recipe).
+
+* [Create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst).
+
+* Import the functionality from Java.
+
+None of these options are trivial. That is why it said AVOID DISAPPOINTMENT in [the Wheels section above](#wheels).
 
 ### source.include_exts
 
