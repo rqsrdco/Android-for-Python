@@ -143,7 +143,7 @@ This is basically the list of pip packages and the Python version that your app 
 The current Buildozer default version for Kivy is obsolete, change it to 
 `requirements = python3,kivy==2.0.0`
 
-Some packages don't automatically references their dependencies, so these will have to be explicitly added. For example:
+Some packages don't automatically references their dependencies, so these will have to be explicitly added. These dependencies are found by [Debugging](#debugging). One common example:
 
 `import requests` needs `requirements = python3,kivy==2.0.0,requests,urllib3,chardet,idna`
 
