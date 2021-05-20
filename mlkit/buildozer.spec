@@ -1,1 +1,0 @@
-# (list) Application requirements
