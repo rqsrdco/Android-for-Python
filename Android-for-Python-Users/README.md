@@ -136,11 +136,12 @@ This must contain exctly one period (.) surrounded by alpha numeric characters, 
 
 ### requirements
 
-This is basically the list of pip packages and the Python version that your app depends on. It is important that you understand what your app depends on. The current Buildozer default version for Kivy is obsolete, change it to:
+This is basically the list of pip packages and the Python version that your app depends on. It is important that you understand what your app depends on. The requirements list must be complete, missing one item is the most common cause of a run time crash on Android.
+
+The current Buildozer default version for Kivy is obsolete, change it to:
 ```
 requirements = python3,kivy==2.0.0
 ```
-The list must be complete, missing one item is the most common cause of a run time crash on Android.
 
 Some packages don't automatically references their dependencies, so these will have to be explicitly added. For example:
 
