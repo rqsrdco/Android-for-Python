@@ -33,7 +33,7 @@ Multi-tasking; on the desktop when an app loses focus or is minimized it continu
 
 ## Wheels
 
-Some Python packages are not written in Python (are not pure-Python), they contain code that must be compiled. Pip provides pre-compiled packages for desktop OSes, but not for Android. P4a addresses this with [recipes](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes), but not all impure packages are available. AVOID DISAPPOINTMENT, check availability first.
+Some Python packages are not written in Python (are not pure-Python), they contain code that must be compiled. Pip provides pre-compiled packages for desktop OSes, but not for Android. P4a addresses this with [recipes](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes), but not all impure packages are available. AVOID DISAPPOINTMENT, check availability first. [See also.](#requirements)
 
 ## Meta-information
 
@@ -50,6 +50,8 @@ Physically storage may be 'internal' or 'external', this is a somewhat historica
 ## Private Storage
 
 An app can perform Python file operations (read, write, shutil) on its private storage. Files in Private Storage are persistent over the life of the app, they are retained when the app is updated, and deleted when the app is uninstalled.
+
+The location of an app's private storage is given by for example `app_storage_path()` imported as `from android.storage import app_storage_path`
 
 The install directory './' is also private storage, but files do not persist between installs and updates. Only use this directory for reading data files packaged in the apk.
 
