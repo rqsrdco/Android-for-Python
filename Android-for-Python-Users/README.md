@@ -104,7 +104,7 @@ See any of the nearby examples.
 
 * Attempted to build an impure Python package.
 
-Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL or VirtualBox to run Buildozer.
+Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL, Colab, or VirtualBox to run Buildozer.
 
 Buildozer's behavior can be non-deterministic in any of these cases:
 
