@@ -85,7 +85,7 @@ The Python subprocess is not available. The Android equivalent is an Activity, a
 
 # Android Service
 
-An [Android Service](https://developer.android.com/guide/components/services) is somewhat equivalent to a Python subprocess, in that it can perform operations in the background. An Android service has asynchronous execution and an independent memory space, however unlike a subprocess it does not execute on a different core.
+An [Android Service](https://developer.android.com/guide/components/services) is somewhat equivalent to a Python subprocess, in that it can perform operations in the background. An Android service has asynchronous execution and an independent memory space, however unlike a subprocess it does not execute on a different core. In this context we create an Android service that can emulate a Python subprocess, this emulation does not have the lifetime of a true Android service.
 
 The best (and only) Kivy example is [Kivy Service Osc](https://github.com/tshirtman/kivy_service_osc). OSC is a good package for message passing between app and service. However it is not designed for passing large datas, consider using the file system in this case.
 
