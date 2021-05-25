@@ -89,14 +89,6 @@ An [Android Service](https://developer.android.com/guide/components/services) is
 
 The best (and only) Kivy example is [Kivy Service Osc](https://github.com/tshirtman/kivy_service_osc). OSC is a good package for message passing between app and service. However it is not designed for passing large datas, consider using the file system in this case.
 
-## Service Lifetime
-
-A service started by a Kivy app executes while the app is either in the foreground or paused, and like a Python subprocess stops when the app stops. An app stops when it is removed from the list of currently started apps. This lifetime is different from the lifetime of a Java service.
-
-A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Background services are more vulnerable than foreground services. Consider having the service send heartbeat messages to the app, and the app restaring the service on no heartbeat. However the service will not restart while the app is paused.
-
-It is possible to extend the lifetime using `setAutoRestartService()` to force a service to restart when it stops. You may **not want to do this** as the Kivy app which started the service and which has since stopped, will hang with a black screen when it is restarted and the service is still running.
-
 ## Specifying a Service 
 
 If the context of Kivy, an Android service is a python script. The script has a file name and we give the service some name; these are associated in `buildozer.spec` (here `the_service.py` is the name of the script, and `Whatever` the name we give the service). To start a background service:
@@ -123,6 +115,14 @@ services = Whatever:the_service.py:foreground
 android.permissions = FOREGROUND_SERVICE
 ```
 A notification icon will be created in the task bar. 
+
+## Service Lifetime
+
+The lifetime of the service's Python script is usually determined by an infinite loop, if this is the case the lifetime of the service is determined by the lifetime of the app. A service started by a Kivy app executes while the app is either in the foreground or paused, and like a Python subprocess stops when the app stops. An app stops when it is removed from the list of currently started apps. This lifetime is different from the lifetime of a Java service.
+
+A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Background services are apparently more vulnerable than foreground services. Consider having the service send heartbeat messages to the app, and the app restaring the service on no heartbeat. However the service will not restart while the app is paused.
+
+It is possible to extend the lifetime using `setAutoRestartService()` to force a service to restart when it stops. You may **not want to do this** as the Kivy app which started the service and which has since stopped, will hang with a black screen when it is restarted and the service is still running.
 
 ## Service Performance
 
@@ -205,6 +205,10 @@ Some Kivy widgets depend on other packages. For example:
 Some pip3 package names are not the same as the class name. For example:
 
 `from bs4 import BeautifulSoup` needs `requirements = python3,kivy==2.0.0,beautifulsoup4`
+
+Some recipe names are not the same as the class name. For example:
+
+`import google.protobuf` needs `requirements = python3,kivy==2.0.0,protobuf_cpp`
 
 The packages you add here **must be pure Python, or have a recipe** [in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes). If this is not the case, the options are to:
 
