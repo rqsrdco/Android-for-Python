@@ -93,7 +93,7 @@ The best (and only) Kivy example is [Kivy Service Osc](https://github.com/tshirt
 
 A service started by a Kivy app executes while the app is either in the foreground or paused, and like a Python subprocess stops when the app stops. An app stops when it is removed from the list of currently started apps. This lifetime is different from the lifetime of a Java service.
 
-A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Background services are more vulnerable than foreground services.
+A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Background services are more vulnerable than foreground services. Consider having the service send heartbeat messages to the app, and the app restaring the service on no heartbeat. However the service will not restart while the app is paused.
 
 It is possible to extend the lifetime using `setAutoRestartService()` to force a service to restart when it stops. You may **not want to do this** as the Kivy app which started the service and which has since stopped, will hang with a black screen when it is restarted and the service is still running.
 
