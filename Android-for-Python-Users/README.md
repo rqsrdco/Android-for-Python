@@ -83,6 +83,55 @@ Kivy executes on the 'UI thread', Android requires that this thread is always re
 
 The Python subprocess is not available. The Android equivalent is an Activity, an Activity with no UI is a Service. An Activity can be created through Pyjnius and Java, by first creating an Intent. The special case of creating an Android Service can be automated using Buildozer.
 
+# Android Service
+
+An [Android Service](https://developer.android.com/guide/components/services) is somewhat equivalent to a Python subprocess, in that it can perform operations in the background. An Android service has asynchronous execution and an independent memory space, however unlike a subprocess it does not execute on a different core.
+
+The best (and only) Kivy example is [Kivy Service Osc](https://github.com/tshirtman/kivy_service_osc). OSC is a good package for message passing between app and service. However it is not designed for passing large datas, consider using the file system in this case.
+
+## Service Lifetime
+
+A service started by a Kivy app executes while the app is either in the foreground or paused, and like a Python subprocess stops when the app stops. An app stops when it is removed from the list of currently started apps. This lifetime is different from the lifetime of a Java service.
+
+A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Background services are more vulnerable than foreground services.
+
+It is possible to extend the lifetime using `setAutoRestartService()` to force a service to restart when it stops. You may **not want to do this** as the Kivy app which started the service and which has since stopped, will hang with a black screen when it is restarted and the service is still running.
+
+## Specifying a Service 
+
+If the context of Kivy, an Android service is a python script. The script has a file name and we give the service some name; these are associated in `buildozer.spec` (here `the_service.py` is the name of the script, and `Whatever` the name we give the service). To start a background service:
+```
+# (list) List of service to declare
+services = Whatever:the_service.py
+```
+
+We start the service from an app using the full app package name, '.Service', and the name of the service:
+```
+from android import mActivity
+context =  mActivity.getApplicationContext()
+SERVICE_NAME = str(context.getPackageName()) + '.Service' + 'Whatever'
+self.service = autoclass(SERVICE_NAME)
+self.service.start(mActivity,'')
+```
+
+A [foreground service](https://developer.android.com/guide/components/foreground-services) is specified in buildozer.spec with: 
+```
+# (list) List of service to declare
+services = Whatever:the_service.py:foreground
+
+# (list) Permissions
+android.permissions = FOREGROUND_SERVICE
+```
+A notification icon will be created in the task bar. 
+
+## Service Performance
+
+Unlike a Python subprocess an Android Service executes on the same core as the UI that started it (perhaps multitasking?), so the service can impact UI performance. Computational or I/O tasks in the service should be performed in threads.
+
+## p4a Service Implementation
+
+If you want to understand the implementation of services in more detail, read the code: [PythonService.java](https://github.com/kivy/python-for-android/blob/develop/pythonforandroid/bootstraps/common/build/src/main/java/org/kivy/android/PythonService.java), [Service.tmpl.java](https://github.com/kivy/python-for-android/blob/develop/pythonforandroid/bootstraps/common/build/templates/Service.tmpl.java), and [build.py](https://github.com/kivy/python-for-android/blob/develop/pythonforandroid/bootstraps/common/build/build.py).
+
 # App Permissions
 
 Android restricts access to many features. An app must declare the permissions it requires. There are two different declarations, manifest and user. User permissions are a subset of manifest permissions.
