@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/05/24
+Revised 2021/05/27
 
 # Introduction
 
@@ -212,7 +212,7 @@ Some recipe names are not the same as the class name. For example:
 
 Some imports have more than one of the above cases. To determine a package's dependencies look in its requirements.txt file on GitHub. You may have to do this recursively to get the full list of requirements. For example for `pyrebase` start with [requirements.txt](https://github.com/thisbejim/Pyrebase/blob/master/requirements.txt) to see the dependencies, there are six. The first is `requests`, this one is easy because its dependencies are listed earlier in this section. For the others recur. If you miss one it will show up as a `ModuleNotFoundError` at run time. It is not hard, just stop whining and do the work. For `pyrebase` the end result:
 
-`import pyrebase` needs `requirements = python3,kivy==2.0.0,pyrebase,requests,urllib3,chardet,idna,gcloud,oauth2client,requests-toolbelt,protobuf_cpp,python-jwt,pycrypto,httplib2,pyparsing,pyasn1,pyasn1_modules,rsa,jwcrypto,cryptography`
+`import pyrebase` needs `requirements = python3,kivy==2.0.0,pyrebase,requests,urllib3,chardet,idna,gcloud,oauth2client,requests-toolbelt,protobuf_cpp,python-jwt,pycryptodome,httplib2,pyparsing,pyasn1,pyasn1_modules,rsa,jwcrypto,cryptography`
 
 The packages you add here **must be pure Python, or have a recipe** [in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes). If this is not the case, the options are to:
 
