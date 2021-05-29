@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/05/27
+Revised 2021/05/28
 
 # Introduction
 
@@ -118,11 +118,9 @@ A notification icon will be created in the task bar.
 
 ## Service Lifetime
 
-The lifetime of the service's Python script is usually determined by an infinite loop, if this is the case the lifetime of the service is determined by the lifetime of the app. A service started by a Kivy app executes while the app is either in the foreground or paused, and like a Python subprocess stops when the app stops. An app stops when it is removed from the list of currently started apps. This lifetime is different from the lifetime of a Java service.
+The lifetime of the service's Python script is usually determined by an infinite loop, if this is the case the lifetime of the service is determined by the lifetime of the app. A service started by a Kivy app executes while the app is either in the foreground or paused, and like a Python subprocess stops when the app stops. An app stops when it is removed from the list of currently started apps. This lifetime is different from the lifetime of a Java service which is persistent.
 
-A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Background services are apparently more vulnerable than foreground services. Consider having the service send heartbeat messages to the app, and the app restaring the service on no heartbeat. However the service will not restart while the app is paused.
-
-It is possible to extend the lifetime using `setAutoRestartService()` to force a service to restart when it stops. You may **not want to do this** as the Kivy app which started the service and which has since stopped, will hang with a black screen when it is restarted and the service is still running.
+A service can be killed at any time by Android if it requires the resources. This is unlikely but possible. Extend the lifetime using [`setAutoRestartService()`](https://github.com/kivy/python-for-android/blob/develop/doc/source/services.rst#service-auto-restart) which forces a service to restart when it stops (set to False when comanding the service to stop). If you use auto restart you must use `kivy==master`. With [kivy==2.0.0](https://github.com/kivy/kivy/pull/7508), the Kivy app which started the service and which has since stopped will hang with a black screen when it is restarted and the service is still running.
 
 ## Service Performance
 
@@ -303,6 +301,12 @@ KivyMD is in development, which means some functionality [is still changing](htt
 ## Camera
 
 The Kivy Camera widget does not work on Android, neither does the OpenCV camera. Try the [Xcamera widget](https://github.com/kivy-garden/xcamera) from the Kivy Garden, it still has issues but is currently the only choice for an camera preview as part of a layout. Another option is [CameraXF](https://github.com/RobertFlatt/Android-for-Python/tree/main/cameraxf), a turnkey full screen photo, video, and image analysis camera.
+
+## Keyboard
+
+The relationship between the Android keyboard and the layout is somewhat configurable with [softinput_mode](https://kivy.org/doc/stable/api-kivy.core.window.html#kivy.core.window.WindowBase.softinput_mode), consider `Window.softinput_mode = 'below_target'`.
+
+The type of keyboard can be set with `input_type` for example `TextInput(input_type = 'tel')`. Accepted values are 'text', 'number', 'url', 'mail', 'datetime', 'tel', or 'address'. Input_type requires `kivy==master` and does not work with kivy==2.0.0 .
 
 ## Back Button and Gesture
 
