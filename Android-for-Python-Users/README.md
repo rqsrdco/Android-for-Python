@@ -191,6 +191,8 @@ Generally you can find what packages a package depends on by looking on GitHub a
 
 It is important that you understand what your app depends on. The requirements list must be complete, missing one item is the most common cause of a run time crash on Android. The next most common cause is adding a package that is not pure Python or does not have a recipe.
 
+Do not add Python system modules, only packages you might install with pip3 on the desktop. Or for some recipes, other recipies whose name begins with 'lib'.
+
 If you have a problem run the [debugger](#debugging).
 
 Some examples:
