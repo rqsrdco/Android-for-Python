@@ -185,12 +185,20 @@ This must contain exctly one period (.) surrounded by alpha numeric characters, 
 
 ### requirements
 
-This is basically the list of pip packages and the Python version that your app depends on. It is important that you understand what your app depends on. The requirements list must be complete, missing one item is the most common cause of a run time crash on Android.
+This is basically the list of pip packages and the Python version that your app depends on. On the desktop this is handled for you by `pip3 install`, at the cost of disk space. On Android there is no `pip3` so you have to do it by hand.
+
+Generally you can find what packages a package depends on by looking on GitHub at the package's `requirements.txt` file (if it exists). These packages must be added to requirements in buildozer.spec.   
+
+It is important that you understand what your app depends on. The requirements list must be complete, missing one item is the most common cause of a run time crash on Android. The next most common cause is adding a package that is not pure Python or does not have a recipe.
+
+If you have a problem run the [debugger](#debugging).
+
+Some examples:
 
 The current Buildozer default version for Kivy is obsolete, change it to 
 `requirements = python3,kivy==2.0.0`
 
-Some packages don't automatically references their dependencies, so these will have to be explicitly added. These dependencies are usually found by [debugging](#debugging). One common example:
+Some packages have dependencies but no requirements.txt file, the only way to resolve these is with the debugger. One example:
 
 `import requests` needs `requirements = python3,kivy==2.0.0,requests,urllib3,chardet,idna`
 
@@ -208,7 +216,7 @@ Some recipe names are not the same as the class name. For example:
 
 `import google.protobuf` needs `requirements = python3,kivy==2.0.0,protobuf_cpp`
 
-Some imports have more than one of the above cases. To determine a package's dependencies look in its requirements.txt file on GitHub. You may have to do this recursively to get the full list of requirements. For example for `pyrebase` start with [requirements.txt](https://github.com/thisbejim/Pyrebase/blob/master/requirements.txt) to see the dependencies, there are six. The first is `requests`, this one is easy because its dependencies are listed earlier in this section. For the others recur. If you miss one it will show up as a `ModuleNotFoundError` at run time. It is not hard, just stop whining and do the work. For `pyrebase` the end result:
+Some imports have more than one of the above cases. To determine a package's dependencies look in requirements.txt recursively. For example for `pyrebase` start with [requirements.txt](https://github.com/thisbejim/Pyrebase/blob/master/requirements.txt) to see the dependencies, there are six. The first is `requests`, this one is easy because its dependencies are listed earlier in this section. For the others recur. If you miss one it will show up as a `ModuleNotFoundError` at run time. It is not hard, just stop whining and do the work. For example for `pyrebase` we get:
 
 `import pyrebase` needs `requirements = python3,kivy==2.0.0,pyrebase,requests,urllib3,chardet,idna,gcloud,oauth2client,requests-toolbelt,protobuf_cpp,python-jwt,pycryptodome,httplib2,pyparsing,pyasn1,pyasn1_modules,rsa,jwcrypto,cryptography`
 
