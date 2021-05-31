@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/05/29
+Revised 2021/05/30
 
 # Introduction
 
@@ -322,7 +322,24 @@ The type of keyboard can be set with `input_type` for example `TextInput(input_t
 
 ## Back Button and Gesture
 
-On Android a back button/gesture pauses an app. From Kivy it does not appear possible to overload this behavior. Anybody know a way?
+A back button/gesture can be detected with a test for key == 27, as shown in the [documentation](https://github.com/kivy/python-for-android/blob/develop/doc/source/apis.rst#handling-the-back-button). The key handler **must** return a boolean.
+
+Android 10 and up require that the back button/gesture can return the app to the Android home screen, therefore there must be a state in the app where back button/gesture is not consumed by the app. For example if the back button/gesture transitions between Kivy screens, from the "main" screen the app can on a back event go to the Android home screen:
+```
+class Main(ScreenManager):
+    def __init__(self, **kwargs): 
+        super().__init__(**kwargs)
+        Window.bind(on_keyboard = self.keyboard)
+        
+    def keyboard(self,window,key,*args):
+        if key == 27 and self.current != "main":
+            self.current = some_previous_screen
+            return True   # key event consumed by app
+        else:           
+            return False  # key event passed to Android
+```
+
+If `kivy==master` is used `p4a.branch = develop` **must** be used, else there will be a run time error `object has no attribute 'changeKeyboard'`. `kivy==2.0.0` does not appear sensitive to `p4a.branch`.
 
 ## Kivy Lifecycle
 
