@@ -3,7 +3,7 @@ Android for Python Users
 
 *An unofficial Users' Guide*
 
-Revised 2021/05/30
+Revised 2021/06/05
 
 # Introduction
 
@@ -185,6 +185,8 @@ This must contain exctly one period (.) surrounded by alpha numeric characters, 
 
 ### requirements
 
+#### requirements basics
+
 This is basically the list of pip packages and the Python version that your app depends on. On the desktop this is handled for you by `pip3 install`, at the cost of disk space. On Android there is no `pip3` so you have to do it by hand.
 
 Generally you can find what packages a package depends on by looking on GitHub at the package's `requirements.txt` file (if it exists). These packages must be added to requirements in buildozer.spec.   
@@ -193,12 +195,26 @@ It is important that you understand what your app depends on. The requirements l
 
 Do not add Python system modules, only packages you might install with pip3 on the desktop. Or for some recipes, other recipies whose name begins with 'lib'.
 
-If you have a problem run the [debugger](#debugging).
-
-Some examples:
+There are some pip3 packages that are added automatically, no need to put these in requirements: `libffi, openssl, sqlite3, setuptools, six, pyjnius, android, certifi`.
 
 The current Buildozer default version for Kivy is obsolete, change it to 
 `requirements = python3,kivy==2.0.0`
+
+The packages you add here **must be pure Python, or have a recipe** [in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes). If this is not the case, the options are to:
+
+* Rewrite the app
+
+* Locally modify an existing recipe [see Appendix C](#appendix-c--locally-modifying-a-recipe).
+
+* [Create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst).
+
+* Import the functionality from Java.
+
+None of these options are trivial. That is why it said AVOID DISAPPOINTMENT in [the Wheels section above](#wheels).
+
+If you have a problem run the [debugger](#debugging).
+
+#### Simple requirements examples
 
 Some packages have dependencies but no requirements.txt file, the only way to resolve these is with the debugger. One example:
 
@@ -218,23 +234,13 @@ Some recipe names are not the same as the class name. For example:
 
 `import google.protobuf` needs `requirements = python3,kivy==2.0.0,protobuf_cpp`
 
+#### More complex requirements
+
 Some imports have more than one of the above cases. To determine a package's dependencies look in requirements.txt recursively. For example for `pyrebase` start with [requirements.txt](https://github.com/thisbejim/Pyrebase/blob/master/requirements.txt) to see the dependencies, there are six. The first is `requests`, this one is easy because its dependencies are listed earlier in this section. For the others recur. If you miss one it will show up as a `ModuleNotFoundError` at run time. It is not hard, just stop whining and do the work. For example for `pyrebase` we get:
 
 `import pyrebase` needs `requirements = python3, kivy==2.0.0, pyrebase, requests, urllib3, chardet, idna, gcloud, oauth2client, requests-toolbelt, protobuf_cpp, python-jwt, pycryptodome, httplib2, pyparsing, pyasn1, pyasn1_modules, rsa, jwcrypto, cryptography`
 
-There are some pip3 packages that are added automatically, no need to put these in requirements: `libffi, openssl, sqlite3, setuptools, six, pyjnius, android, certifi`.
-
-The packages you add here **must be pure Python, or have a recipe** [in this list](https://github.com/kivy/python-for-android/tree/develop/pythonforandroid/recipes). If this is not the case, the options are to:
-
-* Rewrite the app
-
-* Locally modify an existing recipe [see Appendix C](#appendix-c--locally-modifying-a-recipe).
-
-* [Create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst).
-
-* Import the functionality from Java.
-
-None of these options are trivial. That is why it said AVOID DISAPPOINTMENT in [the Wheels section above](#wheels).
+Anybody got any more examples I could add here?
 
 ### source.include_exts
 
@@ -314,7 +320,7 @@ KivyMD is in development, which means some functionality [is still changing](htt
 
 ## Camera
 
-The Kivy Camera widget does not work on Android, neither does the OpenCV camera. Try the [Xcamera widget](https://github.com/kivy-garden/xcamera) from the Kivy Garden, it still has issues but is currently the only choice for an camera preview as part of a layout. Another option is [CameraXF](https://github.com/RobertFlatt/Android-for-Python/tree/main/cameraxf), a turnkey full screen photo, video, and image analysis camera.
+It is hard to get the Kivy Camera widget to work on Android, the OpenCV camera does not work on Android. Try the [Xcamera widget](https://github.com/kivy-garden/xcamera) from the Kivy Garden, it still has issues but is currently the only choice for an camera preview as part of a layout. Another option is [CameraXF](https://github.com/RobertFlatt/Android-for-Python/tree/main/cameraxf), a turnkey full screen photo, video, and image analysis camera.
 
 ## Keyboard
 
@@ -368,6 +374,8 @@ If you plan to use Plyer, and the idea of it is very appealing, first try a smal
 
 ## Pyjnius
 
+### Basic Pyjnius Usage
+
 [Pyjnus](https://github.com/kivy/pyjnius/tree/master/docs/source) allows import of Java code into Python code. It is an interface to the Java api and the Android api. The Android api is only available on Android devices, Android api calls must be debugged on Android.
 
 ```python
@@ -387,15 +395,34 @@ DownloadManagerRequest = autoclass('android.app.DownloadManager$Request')
 
 Then use this to write code with Python syntax and semantics, and Java class semantics added. Some basic knowledge of Java semantics is required, get over it. Android classes will require (possibly extensive) reading of the [Android Developer Guide](https://developer.android.com/guide) and [Android Reference](https://developer.android.com/reference).
 
-It is also possible to write Java class implementations in Python, [RTFM](https://github.com/kivy/pyjnius/blob/master/docs/source/api.rst#java-class-implementation-in-python) and [look at some examples](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/listeners.py).
+It is also possible to write Java class implementations in Python usiny `PythonJavaClass`, [RTFM](https://github.com/kivy/pyjnius/blob/master/docs/source/api.rst#java-class-implementation-in-python) and [look at some examples](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/listeners.py).
 
-It is not possible to import Java *abstract* classes, as they have no *implementation* (abstract and implementation are Java keywords). And it it is not possible to provide the implementation in Python. You must write the implementation in Java and import that.
+Note: some documentation examples are obsolete. If you see '.renpy.' as a sub field in an autoclass argument replace it with '.kivy.'.
+
+### Pyjnius Challenges
+
+It is not possible to import Java *abstract* classes, as they have no *implementation* (abstract and implementation are Java keywords). And it it is not possible to provide the implementation in Python. You must find or write the implementation in Java and import that new class.
 
 One thing to watch out for is you will be using two garbage collectors working on the same heap, but they don't know each other's boundaries. Python may free a local reference to a Java object because it cant see that the object is used. Obviously this will cause the app to crash in an ugly way. So use class variables, as in the example above, to indicate persistence to the Python garbage collector.
 
 Python for Android builds an apk with a minimum device api. Importing Java modules can invalidate this minimum. Check the [Added in API level field](https://developer.android.com/reference/android/provider/MediaStore.Downloads) in the class or method reference documentation.
 
-Note: some documentation examples are obsolete. If you see '.renpy.' as a sub field in an autoclass argument replace it with '.kivy.'.
+### Callbacks with a Java Abstract Class.
+
+Pyjnius allows us to call Java from Python, calling Python from Java is achived by overriding the Java class implementation in Python using `PythonJavaClass`. However we cannot do this if the Java class is abstract, in this case we implement the derived class in Java and pass the Python callback inside a Java wrapper class with a `PythonJavaClass` implememntation.
+
+The steps are outlined below, with links to an example in cameraxf.
+
+- Create a [Java wrapper interface class](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/camerax_src/org/kivy/camerax/CallbackWrapper.java), the class contains the Java callback method prototypes.
+
+- Create a [Python implementation](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/listeners.py#L118) of the wrapper class as a subclass of `PythonJavaClass`. Note that the Python class has the Python callback method as an initialization parameter, the Java interface did not have this. 
+
+- Create the [listener derived from the abstract class](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/camerax_src/org/kivy/camerax/ImageSavedCallback.java) as usual. Except it has the wrapper class as an initialization parameter, so it can call the wrapper's callback method(s).
+
+- [In Python](https://github.com/RobertFlatt/Android-for-Python/blob/main/cameraxf/cameraxf/camerax.py#L354-L356) instantiate the wrapper with a reference to the Python callback method as an parameter. In Python instantiate the listener implementing the abstract class with a reference to the wrapper as an parameter. In Python instantiate the Java functionality with it's listener as a parameter.
+
+No, I won't do it for you.
+
 
 ## Kivy Garden
 
