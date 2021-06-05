@@ -455,7 +455,9 @@ HeRo002 tells us what to [expect](https://github.com/kivy/buildozer/issues/1290)
 
 The store will soon require that apps are submitted as an [app bundle](https://developer.android.com/guide/app-bundle).
 
-Buildozer does not currently build .aab files. The following is a summary of a workaround posted on [Google Groups.](https://groups.google.com/g/kivy-users/c/LmoegwYuEEk/m/II-wuO-nAgAJ) This workaround only applies to single architecture bundles, there is no workaround for multi architecture bundles. Basically it specifies part of `project/.buildozer` as an Android Studio project, and lets Android Studio do the work (virtual machine users, also read the two extra items below):
+Buildozer does not currently build .aab files. The following is a summary of a workaround posted on [Google Groups.](https://groups.google.com/g/kivy-users/c/LmoegwYuEEk/m/II-wuO-nAgAJ) This workaround only applies to single architecture bundles, there is no workaround for multi architecture bundles. [Because architecture specific Kivy app code is in the apk in assets/private.mp3, but in .aab assets are architecture independent. A resolution would require renaming private.mp3 for each archicture, and the app picking the right one for the device.] 
+
+Basically the workaround specifies part of `project/.buildozer` as an Android Studio project, and lets Android Studio do the work (virtual machine users, also read the two extra items below):
 
 1) In Android Studio `File->Open <project>/.buildozer/android/platform/build-arm64-v8a/dists/<app_name>__arm64-v8a/`
 
