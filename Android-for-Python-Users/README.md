@@ -281,7 +281,7 @@ First connect the device via USB, on the Android device enable 'Developer Mode' 
 
 If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a--using-adb)
 
-If Buildozer was run on a WSL then it may not be able to use the the physical USB port and the 'debug deploy run logcat' options will not work. [In this case use adb instead.](#appendix-d--using-adb)
+If Buildozer was run on a WSL then it may not be able to use the the physical USB port and the 'debug deploy run logcat' options will not work. [In this case use adb instead.](#appendix-d--debugging-on-wsl)
 
 Successful setup is indicated by log output similar to:
 ```
