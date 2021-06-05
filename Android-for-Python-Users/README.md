@@ -521,6 +521,8 @@ Linux Subsystem (WSL) setup:
 ```
 export ADB_SERVER_SOCKET=tcp:192.168.1.250:5037
 ```
+Note: `192.168.1.250` is local ip of your machine find it using `ipconfig` in cmd
+
 Finally, `adb devices` in Linux Subsystem should show your device
 ```
 List of devices attached
