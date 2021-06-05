@@ -228,7 +228,7 @@ The packages you add here **must be pure Python, or have a recipe** [in this lis
 
 * Rewrite the app
 
-* Locally modify an existing recipe [see Appendix C](#appendix-c-locally-modifying-a-recipe).
+* Locally modify an existing recipe [see Appendix C](#appendix-c--locally-modifying-a-recipe).
 
 * [Create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst).
 
@@ -279,9 +279,9 @@ On the desktop your friends are the Python stack trace, and logging or print sta
 
 First connect the device via USB, on the Android device enable 'Developer Mode' and 'USB debugging'.
 
-If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a-using-adb)
+If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a--using-adb)
 
-If Buildozer was run on a WSL then it may not be able to use the the physical USB port and the 'debug deploy run logcat' options will not work. [In this case use adb instead.](#appendix-d-using-adb)
+If Buildozer was run on a WSL then it may not be able to use the the physical USB port and the 'debug deploy run logcat' options will not work. [In this case use adb instead.](#appendix-d--using-adb)
 
 Successful setup is indicated by log output similar to:
 ```
@@ -296,7 +296,7 @@ ModuleNotFoundError: No module named 'some-import-name'
 ```
 Where 'some-import-name' is in 'some-pip-package', then this pip package name is missing from [buildozer.spec requirements](#requirements).
 
-It is possible to [debug using an emulator](#appendix-b-using-an-emulator) but this is not recomended initially, as it adds unknowns to the debug process. The emulator is useful for checking a debugged app on various devices and Android versions.
+It is possible to [debug using an emulator](#appendix-b--using-an-emulator) but this is not recomended initially, as it adds unknowns to the debug process. The emulator is useful for checking a debugged app on various devices and Android versions.
 
 # Some Related Topics
 
