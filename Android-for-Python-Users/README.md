@@ -228,7 +228,7 @@ The packages you add here **must be pure Python, or have a recipe** [in this lis
 
 * Rewrite the app
 
-* Locally modify an existing recipe [see Appendix C](#appendix-c-locally-modifying-a-recipe).
+* Locally modify an existing recipe [see Appendix C](#appendix-c--locally-modifying-a-recipe).
 
 * [Create a new recipe](https://github.com/kivy/python-for-android/blob/develop/doc/source/recipes.rst).
 
@@ -279,7 +279,9 @@ On the desktop your friends are the Python stack trace, and logging or print sta
 
 First connect the device via USB, on the Android device enable 'Developer Mode' and 'USB debugging'.
 
-If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a-using-adb)
+If Buildozer was run on a virtual machine then it may not be able to use the the physical USB port and the 'deploy run logcat' options will not work. [In this case use adb instead.](#appendix-a--using-adb)
+
+If Buildozer was run on a WSL then it may not be able to use the the physical USB port and the 'debug deploy run logcat' options will not work. [In this case use adb instead.](#appendix-d--debugging-on-wsl)
 
 Successful setup is indicated by log output similar to:
 ```
@@ -294,7 +296,7 @@ ModuleNotFoundError: No module named 'some-import-name'
 ```
 Where 'some-import-name' is in 'some-pip-package', then this pip package name is missing from [buildozer.spec requirements](#requirements).
 
-It is possible to [debug using an emulator](#appendix-b-using-an-emulator) but this is not recomended initially, as it adds unknowns to the debug process. The emulator is useful for checking a debugged app on various devices and Android versions.
+It is possible to [debug using an emulator](#appendix-b--using-an-emulator) but this is not recomended initially, as it adds unknowns to the debug process. The emulator is useful for checking a debugged app on various devices and Android versions.
 
 # Some Related Topics
 
@@ -373,7 +375,7 @@ from jnius import autoclass
 # declare a Java Class
 DownloadManager = autoclass('android.app.DownloadManager')
 # Java sub classes are delimited by a '$' in place of a '.'
-DownloadManagerRequest = autoclass('android.app.DownloadManager$Request')	
+DownloadManagerRequest = autoclass('android.app.DownloadManager$Request')  
 
    # get a class constant
    visibility = DownloadManagerRequest.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
@@ -444,7 +446,7 @@ If Buildozer was run on a virtual machine:
 2) Android Studio will tell you the SDK tools path is wrong, and ask to fix it; do this.
 
 
-# Appendix A Using adb
+# Appendix A : Using adb
 
 The easiest way to get adb is to install Android Studio.
 
@@ -459,7 +461,7 @@ adb logcat -c
 adb logcat > log.txt
 ```
 
-# Appendix B Using an emulator
+# Appendix B : Using an emulator
 
 Install Android Studio.
 
@@ -478,7 +480,7 @@ emulator @Nexus_4_API_21
 ```
 Check the emulator is running using 'adb devices'. Then install an app in the emulator from adb. The apk MUST be built with android.arch set to the same as ABI above.
 
-# Appendix C Locally modifying a recipe
+# Appendix C : Locally modifying a recipe
 
 Modify an existing recipe by making a local copy.
 Replace RECIPE_NAME with whatever recipe you are changing:
@@ -498,3 +500,31 @@ Replace RECIPE_NAME with whatever recipe you are changing:
 7) buildozer android debug
 
 
+# Appendix D : Debugging on WSL
+
+The easiest way to get adb is to install Android Studio for both Linux Subsystem (WSL) and Windows of same *Android Debug Bridge version*, use `adb --version` command to find it out
+
+
+Windows setup:
+
+Add something like this to your PATH in Windows:
+    ` C:\Users\UserName\AppData\Local\Android\Sdk\platform-tools`
+
+In cmd / pwsh, run this command and this is your server and should not be closed until you finish debugging.
+```
+adb kill-server
+adb -a -P 5037 nodaemon server
+```
+Add the below environmental variable to the ~/.bashrc or ~/.zshrc , depending on your shell
+
+Linux Subsystem (WSL) setup:
+```
+export ADB_SERVER_SOCKET=tcp:192.168.1.250:5037
+```
+Note: `192.168.1.250` is local ip of your machine find it using `ipconfig` in cmd
+
+Finally, `adb devices` in Linux Subsystem should show your device
+```
+List of devices attached
+0A052FDE40019P  device
+```
