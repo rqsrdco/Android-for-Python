@@ -145,15 +145,20 @@ See any of the nearby examples.
 # Buildozer and p4a
 
 ## Install
-[RTFM](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), really. Errors during a Buildozer build are usually because the user:
+
+Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL, Colab, or VirtualBox to run Buildozer. Buildozer also runs on a Mac, but the number of users is small and this is reflected in the availability of help and in software maturity.
+
+[Install documentation](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), RTFM, really.
+
+**Test your Buildozer install by building (`buildozer android debug`) and running [Hello World](https://kivy.org/doc/stable/guide/basic.html#create-an-application) with the default `buildozer.spec` (create this with `buildozer init`). I know you just want to see your app run on Android, but this simple first step will provide you will a framework to address any future issues.**
+
+Errors during a Buildozer build are usually because the user:
 
 * Failed to [read the install instructions](https://github.com/kivy/buildozer/blob/master/docs/source/installation.rst), and so failed to install a dependency.
 
 * Failed to accept the Google License Agreements.
 
 * Attempted to build an impure Python package.
-
-Buildozer runs on Linux, Windows users need a Linux virtual machine such as WSL, Colab, or VirtualBox to run Buildozer.
 
 Buildozer's behavior can be non-deterministic in any of these cases:
 
@@ -162,6 +167,8 @@ Buildozer's behavior can be non-deterministic in any of these cases:
 * It is run on an NTFS partition mounted on a Linux system.
 
 * There are Python style trailing comments in the buildozer.spec
+
+* The first time an app is run after its install it may be *very* slow to start if UC Browser is installed on the Android device and is scanning.
 
 
 ## Changing buildozer.spec
@@ -320,7 +327,7 @@ KivyMD is in development, which means some functionality [is still changing](htt
 
 ## Camera
 
-It is hard to get the Kivy Camera widget to work on Android, the OpenCV camera does not work on Android. Try the [Xcamera widget](https://github.com/kivy-garden/xcamera) from the Kivy Garden, it still has issues but is currently the best choice for an camera preview as part of a layout. Also there is [Color blind camera](https://github.com/inclement/colour-blind-camera) and [zbarcam](https://github.com/kivy-garden/zbarcam). Another option is [CameraXF](https://github.com/RobertFlatt/Android-for-Python/tree/main/cameraxf), a turnkey full screen photo, video, and image analysis camera.
+It is hard to get the Kivy Camera widget to work on Android, the OpenCV camera does not work on Android. Try the [Xcamera widget](https://github.com/kivy-garden/xcamera) from the Kivy Garden, or [kivy-anderoid-camera](https://github.com/alecvn/kivy-android-camera). Also there is [Color blind camera](https://github.com/inclement/colour-blind-camera) and [zbarcam](https://github.com/kivy-garden/zbarcam). Another option is [CameraXF](https://github.com/RobertFlatt/Android-for-Python/tree/main/cameraxf), a turnkey full screen photo, video, and image analysis camera.
 
 ## Keyboard
 
@@ -426,13 +433,23 @@ No, I won't do it for you.
 
 ## Kivy Garden
 
-[Kivy Garden](https://github.com/kivy-garden/) is a library of components ('flowers'). It is mostly not maintained. Anybody who has had a garden knows a garden needs a gardener, Kivy Garden doesn't have one. Kivy Garden is a useful resource, it is mostly best used as examples to copy and modify (fix) rather than components you can install and instantiate.
+[Kivy Garden](https://github.com/kivy-garden/) is a library of components ('flowers'). It is mostly not maintained. Anybody who has had a garden knows a garden needs a gardener, Kivy Garden doesn't have one. Set your expectations accordingly.
+
+For flowers that are maintained add them to your buildozer.spec like this:
+`requirements = python3, kivy==2.0.0, kivy_garden.xcamera`. For flowers that are not maintained copy the code to your project and edit so that it builds.
+
+There is a `#garden_requirements =` field in buildozer.spec, as far as I know this is legacy code and should be ignored.
 
 ## Android for Python
 
 [Android for Python](https://github.com/RobertFlatt/Android-for-Python) contains examples of some Android features as used from Python (and this document). These examples only run on Android.
 
 ## Other Resources
+
+There are **a lot of useful features** to be found at these links:
+
+[https://github.com/Sahil-pixel/Pykivdroid](https://github.com/Sahil-pixel/Pykivdroid)
+
 [https://github.com/yunus-ceyhan](https://github.com/yunus-ceyhan)
 
 [https://github.com/adywizard](https://github.com/adywizard)
@@ -492,6 +509,10 @@ adb logcat > log.txt
 
 # Appendix B : Using an emulator
 
+It is possible to debug using an emulator but this is not recomended initially, as it adds unknowns to the debug process. The emulator is useful for checking a debugged app on various devices and Android versions.
+
+The apk **must** be built with buildozer.spec `android.arch` having the same as ABI the emulator, I find x86 works more reliably than x86_64.
+
 Install Android Studio.
 
 In Android Studio, go to Tools->AVD Manager
@@ -507,7 +528,7 @@ Start an emulator using it's name
 ```
 emulator @Nexus_4_API_21
 ```
-Check the emulator is running using 'adb devices'. Then install an app in the emulator from adb. The apk MUST be built with android.arch set to the same as ABI above.
+Check the emulator is running using 'adb devices'. Then install an app in the emulator from adb. 
 
 # Appendix C : Locally modifying a recipe
 
