@@ -378,15 +378,17 @@ The [Plyer examples](https://github.com/kivy/plyer/tree/master/examples) are the
 
 The following Plyer modules require Manifest and run time [permissions](#app-permissions):
 
-*      audio  	    	    RECORD_AUDIO
-*      battery		    BATTERY_STATS
-*      brightness 	    WRITE_SETTINGS
-*      call 		    CALL_PHONE 
-*      flash 		    CAMERA, FLASHLIGHT
-*      gps 		    ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
-*      sms 		    SEND_SMS
-*      stt 		    RECORD_AUDIO
-*      vibrator 	    VIBRATE
+Module | Permissions
+-------|------------
+audio | RECORD_AUDIO
+battery | BATTERY_STATS
+brightness | WRITE_SETTINGS
+call | CALL_PHONE 
+flash | CAMERA, FLASHLIGHT
+gps | ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
+sms | SEND_SMS
+stt | RECORD_AUDIO
+vibrator | VIBRATE
 
 If you plan to use Plyer, and the idea of it is very appealing, first try a small test case on your target Android versions. If it does what you expect, check that all the features you need are available; as Plyer has a platform lowest common denominator design.
 
