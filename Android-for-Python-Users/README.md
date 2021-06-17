@@ -454,6 +454,10 @@ For flowers that are maintained add them to your buildozer.spec like this:
 
 There is a `#garden_requirements =` field in buildozer.spec, as far as I know this is legacy code and should be ignored.
 
+## Android Notifications
+
+[Android-Notification-in-Python](https://github.com/Guhan-SenSam/Android-Notification-in-Python)
+
 ## Android for Python
 
 [Android for Python](https://github.com/RobertFlatt/Android-for-Python) contains examples of some Android features as used from Python (and this document). These examples only run on Android.
